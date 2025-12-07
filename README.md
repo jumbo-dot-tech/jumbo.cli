@@ -178,17 +178,21 @@ Jumbo is built with:
 
 ## FAQ
 
-**Why not just use comments or docs?**
+**How does jumbo integrate with my AI agent?**
 
-Comments and docs are static. Jumbo is dynamic—it knows what you're working on *right now* and surfaces relevant context automatically.
+Through hooks. Your agent calls `jumbo session start` at the beginning of a session, and `jumbo` injects relevant project context. A richer context packet is delivered to the agent when it starts work on a goal. New insights are captured in the natural flow of your agent conversations.
 
-**Does this replace documentation?**
+**What if I change agents or models?**
 
-No. Jumbo captures working knowledge: decisions, goals, patterns. Documentation explains the end result. They're complementary.
+Change agents and models at will. `jumbo` just picks up where you left off.
 
-**How does it integrate with my AI agent?**
+**What coding agents does jumbo work with?**
 
-Through hooks. Your agent calls `jumbo session start` at the beginning of a session, and Jumbo injects relevant context. Works with Claude Code, Cursor, Copilot, or any tool that supports prompt hooks.
+`jumbo` has been tested with Claude Code CLI, Gemini CLI, and Copilot CLI. More to be verified soon...
+
+**What IDEs are supported?**
+
+Theoretically, any IDE with an integrated coding agent should work. VS Code running GitHub Copilot has been tested and works well with all supported models. Cursor to be verified soon...
 
 **Where is data stored?**
 
@@ -196,7 +200,17 @@ Locally, in `.jumbo/` within your project. Nothing leaves your machine unless yo
 
 **Can I share context across a team?**
 
-The `.jumbo/` directory can be committed to version control. Your team shares the same project memory.
+Not yet. A teams version is coming soon.
+
+If you're feeling bold, you can try committing `.jumbo/` directory to your repository—not recommended though. Without very tight coordination you're bound to encounter problems. `jumbo` uses Event Sourcing under the hood, working asynchronously will definitely result in out-of-sequence events. 
+
+<!-- **Why not just use comments or docs?**
+
+You can do that, but the amount of context window consumed while your agent crawls your repo for background information leaves little context budget for executing the task precisely. You risk auto-compression and the agent going awry. gure out how to execute a given task, leaves little   They also don't capture vital lessons learned in the context of your 'conversations'  Jumbo is dynamic—it knows what you're working on *right now* and surfaces relevant context automatically. Jumbo let's you focus on what you want to achieve, the background just comes automatically.
+
+**Does this replace documentation?**
+
+Yes. Jumbo makes documentation obsolete. Jumbo captures working memories: project knowledge, architecture details, coding patterns, invariant, decisions, goals, blockers, session data and relations between all of it. It's richer than documentation, never outdated, served up to the your coding agent when it needs it, and available to you when you want it. -->
 
 ---
 
