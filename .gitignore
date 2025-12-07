@@ -137,3 +137,14 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Jumbo
+.jumbo/
+
+# Claude (local)
+.claude/*
+!.claude/settings.json
+
+# Github
+.github/*
+!.github/copilot-instructions.md
