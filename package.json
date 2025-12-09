@@ -1,6 +1,6 @@
 {
   "name": "@jumbo-ctx/cli",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "description": "AI memory like and elephant for your coding agent.",
   "keywords": [
     "cli",
@@ -37,7 +37,8 @@
   ],
   "scripts": {
     "generate:commands": "node build/generate-command-registry.mjs",
-    "prebuild": "npm run generate:commands",
+    "generate:version": "node build/generate-version.mjs",
+    "prebuild": "npm run generate:commands && npm run generate:version",
     "build": "tsc && npm run copy:migrations",
     "copy:migrations": "node build/copy-migrations.mjs",
     "dev": "tsc --watch",

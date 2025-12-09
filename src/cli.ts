@@ -30,13 +30,18 @@ import { bootstrap, ApplicationContainer } from "./infrastructure/composition/bo
 import { generateBannerContent, BannerTrigger, BannerDisplayContext } from "./presentation/cli/shared/utils/BannerContentGenerator.js";
 import { GetProjectSummaryQueryHandler } from "./application/project-knowledge/project/query/GetProjectSummaryQueryHandler.js";
 import { GetWorkSummaryQueryHandler } from "./application/work/query/GetWorkSummaryQueryHandler.js";
+import { BuildTimeCliMetadataReader } from "./infrastructure/cli-metadata/query/BuildTimeCliMetadataReader.js";
+
+// Get CLI version for program configuration
+const cliMetadataReader = new BuildTimeCliMetadataReader();
+const cliVersion = cliMetadataReader.getMetadata().version;
 
 const program = new Command();
 
 program
   .name("jumbo")
   .description(process.stdout.isTTY ? chalk.gray("AI MEMORY LIKE AN ELEPHANT - CONTEXT ENGINEERING AUTOMATED.") : "")
-  .version("0.1.0-alpha.1")
+  .version(cliVersion)
   .usage("<command> <subcommand> [flags]");
 
 // Global flags for output control
@@ -132,7 +137,7 @@ program.helpInformation = function () {
 
     // Show animated banner (only if TTY)
     if (process.stdout.isTTY) {
-      await showAnimatedBanner(content, projectName);
+      await showAnimatedBanner(content, projectName, cliVersion);
     } else {
       await showWelcomeMessage(content);
     }
@@ -192,7 +197,7 @@ program.helpInformation = function () {
     // Show appropriate banner based on trigger and TTY mode
     if (trigger === "first-time" && process.stdout.isTTY) {
       // First-time user in TTY: show animated banner
-      await showAnimatedBanner(content, projectName);
+      await showAnimatedBanner(content, projectName, cliVersion);
     } else {
       // Returning user or non-TTY: show static banner
       await showWelcomeMessage(content);

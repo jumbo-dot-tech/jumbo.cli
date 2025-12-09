@@ -154,6 +154,12 @@ import { SqliteProjectUpdatedProjector } from "../project-knowledge/project/upda
 import { SqliteProjectContextReader } from "../project-knowledge/project/query/SqliteProjectContextReader.js";
 // Project Services
 import { AgentFileProtocol } from "../project-knowledge/project/init/AgentFileProtocol.js";
+// Audience Context Reader
+import { SqliteAudienceContextReader } from "../project-knowledge/audiences/query/SqliteAudienceContextReader.js";
+// AudiencePain Context Reader
+import { SqliteAudiencePainContextReader } from "../project-knowledge/audience-pains/query/SqliteAudiencePainContextReader.js";
+// CLI Metadata Reader
+import { BuildTimeCliMetadataReader } from "../cli-metadata/query/BuildTimeCliMetadataReader.js";
 
 // Event Handlers (Projection Handlers)
 import { SessionStartedEventHandler } from "../../application/work/sessions/start/SessionStartedEventHandler.js";
@@ -309,6 +315,9 @@ import { IProjectContextReader } from "../../application/project-knowledge/proje
 import { IProjectInitializedEventWriter } from "../../application/project-knowledge/project/init/IProjectInitializedEventWriter.js";
 import { IProjectUpdatedEventWriter } from "../../application/project-knowledge/project/update/IProjectUpdatedEventWriter.js";
 import { IAgentFileProtocol } from "../../application/project-knowledge/project/init/IAgentFileProtocol.js";
+import { IAudienceContextReader } from "../../application/project-knowledge/audiences/query/IAudienceContextReader.js";
+import { IAudiencePainContextReader } from "../../application/project-knowledge/audience-pains/query/IAudiencePainContextReader.js";
+import { ICliMetadataReader } from "../../application/cli-metadata/query/ICliMetadataReader.js";
 
 // Port interfaces for session event stores - decomposed by use case
 import { ISessionStartedEventWriter } from "../../application/work/sessions/start/ISessionStartedEventWriter.js";
@@ -390,6 +399,9 @@ export interface ApplicationContainer {
   clock: SystemClock;
   dbConnectionManager: IDbConnectionManager;
   db: Database.Database;
+
+  // CLI Metadata
+  cliMetadataReader: ICliMetadataReader;
 
   // Work Category - Session Event Stores - decomposed by use case
   sessionStartedEventStore: ISessionStartedEventWriter;
@@ -510,14 +522,16 @@ export interface ApplicationContainer {
   projectInitializedProjector: IProjectInitializedProjector & IProjectInitReader;
   projectUpdatedProjector: IProjectUpdatedProjector & IProjectUpdateReader;
   projectContextReader: IProjectContextReader;
-  // AudiencePain Projection Stores - decomposed by use case
-  audiencePainAddedProjector: IAudiencePainAddedProjector;
-  audiencePainUpdatedProjector: IAudiencePainUpdatedProjector & IAudiencePainUpdateReader;
-  audiencePainResolvedProjector: IAudiencePainResolvedProjector;
   // Audience Projection Stores - decomposed by use case
   audienceAddedProjector: IAudienceAddedProjector;
   audienceUpdatedProjector: IAudienceUpdatedProjector;
   audienceRemovedProjector: IAudienceRemovedProjector & IAudienceRemoveReader;
+  audienceContextReader: IAudienceContextReader;
+  // AudiencePain Projection Stores - decomposed by use case
+  audiencePainAddedProjector: IAudiencePainAddedProjector;
+  audiencePainUpdatedProjector: IAudiencePainUpdatedProjector & IAudiencePainUpdateReader;
+  audiencePainResolvedProjector: IAudiencePainResolvedProjector;
+  audiencePainContextReader: IAudiencePainContextReader;
   // ValueProposition Projection Stores - decomposed by use case
   valuePropositionAddedProjector: IValuePropositionAddedProjector;
   valuePropositionUpdatedProjector: IValuePropositionUpdatedProjector & IValuePropositionUpdateReader;
@@ -552,6 +566,7 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   const dbConnectionManager = new SqliteConnectionManager(path.join(jumboRoot, "jumbo.db"));
   const db = dbConnectionManager.getConnection();
   const eventBus = new InProcessEventBus();
+  const cliMetadataReader = new BuildTimeCliMetadataReader();
 
   // ============================================================
   // STEP 1.5: Run Database Migrations (Namespace-based)
@@ -693,14 +708,16 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   const projectInitializedProjector = new SqliteProjectInitializedProjector(db);
   const projectUpdatedProjector = new SqliteProjectUpdatedProjector(db);
   const projectContextReader = new SqliteProjectContextReader(db);
-  // AudiencePain Projection Stores - decomposed by use case
-  const audiencePainAddedProjector = new SqliteAudiencePainAddedProjector(db);
-  const audiencePainUpdatedProjector = new SqliteAudiencePainUpdatedProjector(db);
-  const audiencePainResolvedProjector = new SqliteAudiencePainResolvedProjector(db);
   // Audience Projection Stores - decomposed by use case
   const audienceAddedProjector = new SqliteAudienceAddedProjector(db);
   const audienceUpdatedProjector = new SqliteAudienceUpdatedProjector(db);
   const audienceRemovedProjector = new SqliteAudienceRemovedProjector(db);
+  const audienceContextReader = new SqliteAudienceContextReader(db);
+  // AudiencePain Projection Stores - decomposed by use case
+  const audiencePainAddedProjector = new SqliteAudiencePainAddedProjector(db);
+  const audiencePainUpdatedProjector = new SqliteAudiencePainUpdatedProjector(db);
+  const audiencePainResolvedProjector = new SqliteAudiencePainResolvedProjector(db);
+  const audiencePainContextReader = new SqliteAudiencePainContextReader(db);
   // ValueProposition Projection Stores - decomposed by use case
   const valuePropositionAddedProjector = new SqliteValuePropositionAddedProjector(db);
   const valuePropositionUpdatedProjector = new SqliteValuePropositionUpdatedProjector(db);
@@ -871,6 +888,9 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     dbConnectionManager,
     db,
 
+    // CLI Metadata
+    cliMetadataReader,
+
     // Work Category - Session Event Stores - decomposed by use case
     sessionStartedEventStore,
     sessionEndedEventStore,
@@ -985,14 +1005,16 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     projectInitializedProjector,
     projectUpdatedProjector,
     projectContextReader,
-    // AudiencePain Projection Stores - decomposed by use case
-    audiencePainAddedProjector,
-    audiencePainUpdatedProjector,
-    audiencePainResolvedProjector,
     // Audience Projection Stores - decomposed by use case
     audienceAddedProjector,
     audienceUpdatedProjector,
     audienceRemovedProjector,
+    audienceContextReader,
+    // AudiencePain Projection Stores - decomposed by use case
+    audiencePainAddedProjector,
+    audiencePainUpdatedProjector,
+    audiencePainResolvedProjector,
+    audiencePainContextReader,
     // ValueProposition Projection Stores - decomposed by use case
     valuePropositionAddedProjector,
     valuePropositionUpdatedProjector,

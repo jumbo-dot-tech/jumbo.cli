@@ -66,10 +66,11 @@ export function getBannerLines(): string[] {
  *
  * @param content - Content lines to display after animation
  * @param projectName - Optional project name to display in info box
+ * @param version - CLI version string
  */
-export async function showAnimatedBanner(content: string[], projectName: string | null = null): Promise<void> {
+export async function showAnimatedBanner(content: string[], projectName: string | null = null, version: string = ""): Promise<void> {
   // Use the elephant walk animation for the animated banner
-  await showElephantWalkBanner(content, projectName);
+  await showElephantWalkBanner(content, projectName, version);
 }
 
 /**
@@ -128,7 +129,7 @@ function getJumboTextLines(): string[] {
 /**
  * Get raw JUMBO text ASCII lines (without color)
  */
-function getInfoLines(projectName: string | null): string[] {
+function getInfoLines(projectName: string | null, version: string): string[] {
   const statusText = projectName
     ? ` Context project: ${projectName}`
     : ' Get started: jumbo project init';
@@ -144,7 +145,7 @@ function getInfoLines(projectName: string | null): string[] {
     "     ░░░░░░   ░░░░░░░░  ░░░   ░░   ░░░ ░░░░░░░░   ░░░░░░░░░    ",
     "                                  AI memory like an elephant   ", // Colored grey via chalk.rgb(200,200,200)
     "                                                               ",
-    "   ╭─ v.0.1.0-alpha.1 ──────────────────────────────────────╮  ",
+    "   ╭─ v." + version + " ──────────────────────────────────────╮  ",
     "   │                                                        │  ",
     "   │" + chalk.rgb(255, 210, 61)(statusTextPlain) + " ".repeat(statusTextPadding) + "│", // Colored yellow via chalk.rgb(255, 210, 61)
     "   │                                                        │  ",
@@ -158,15 +159,18 @@ function getInfoLines(projectName: string | null): string[] {
  * @param revealProgress - Progress of letter reveal from left to right (0-1)
  *                         0 = nothing visible, 1 = all visible
  * @param spacing - Number of spaces between elephant and text
+ * @param projectName - Optional project name to display
+ * @param version - CLI version string
  */
 function combineSideBySide(
   elephantLines: string[],
   revealProgress: number = 1,
   spacing: number = 5,
-  projectName: string | null = null
+  projectName: string | null = null,
+  version: string = ""
 ): string[] {
   const elephant = elephantLines;
-  const jumboRaw = getInfoLines(projectName);
+  const jumboRaw = getInfoLines(projectName, version);
 
   // Smooth left-to-right curtain reveal
   const jumboText = jumboRaw.map((line, lineIndex) => {
@@ -212,11 +216,11 @@ function combineSideBySide(
 /**
  * Generate meta content line with project/welcome text and version
  */
-function getMetaContentLine(projectName: string | null, width: number): string {
+function getMetaContentLine(projectName: string | null, width: number, version: string): string {
   const leftText = projectName
     ? chalk.bold.white(`Context project: ${projectName}`)
     : chalk.bold.white("Welcome to Jumbo!");
-  const rightText = chalk.gray("CLI version: 0.1.0-alpha.1");
+  const rightText = chalk.gray("CLI version: " + version);
   const leftLength = stripAnsi(leftText).length;
   const rightLength = stripAnsi(rightText).length;
   const padding = Math.max(1, width - leftLength - rightLength);
@@ -251,8 +255,9 @@ function createWelcomeBox(projectName: string | null, width: number): string[] {
  *
  * @param content - Content lines to display after animation completes
  * @param projectName - Optional project name to display in info box
+ * @param version - CLI version string
  */
-export async function showElephantWalkBanner(content: string[], projectName: string | null = null): Promise<void> {
+export async function showElephantWalkBanner(content: string[], projectName: string | null = null, version: string = ""): Promise<void> {
   if (!process.stdout.isTTY) {
     // Fall back to static banner in non-TTY mode
     console.error("This should not have been called by a non-TTY process.");
@@ -308,7 +313,7 @@ export async function showElephantWalkBanner(content: string[], projectName: str
   // Use the projectName passed from caller for dynamic info box
   for (let step = 0; step <= revealSteps; step++) {
     const progress = step / revealSteps;
-    const combined = combineSideBySide(finalElephant, progress, 5, projectName);
+    const combined = combineSideBySide(finalElephant, progress, 5, projectName, version);
     revealFrames.push(combined);
   }
 

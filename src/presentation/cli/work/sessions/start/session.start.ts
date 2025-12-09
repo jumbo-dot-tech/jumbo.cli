@@ -13,6 +13,7 @@ import { GetSessionStartContextQueryHandler } from "../../../../../application/w
 import { SessionSummaryFormatter } from "./SessionSummaryFormatter.js";
 import { PlannedGoalsFormatter } from "./PlannedGoalsFormatter.js";
 import { InProgressGoalsFormatter } from "./InProgressGoalsFormatter.js";
+import { ProjectContextFormatter } from "./ProjectContextFormatter.js";
 
 /**
  * Command metadata for auto-registration
@@ -53,14 +54,28 @@ export async function sessionStart(
 
     const getSessionStartContext = new GetSessionStartContextQueryHandler(
       container.sessionSummaryProjectionStore,
-      container.goalStatusReader
+      container.goalStatusReader,
+      container.projectContextReader,
+      container.audienceContextReader,
+      container.audiencePainContextReader
     );
     const sessionContext = await getSessionStartContext.execute();
 
     // 2. RENDER: Create formatters and display context
+    const projectContextFormatter = new ProjectContextFormatter();
     const sessionSummaryFormatter = new SessionSummaryFormatter();
     const inProgressGoalsFormatter = new InProgressGoalsFormatter();
     const plannedGoalsFormatter = new PlannedGoalsFormatter();
+
+    // Render project context (name, purpose, audiences, pains)
+    const projectContextYaml = projectContextFormatter.format(
+      sessionContext.project,
+      sessionContext.audiences,
+      sessionContext.audiencePains
+    );
+    if (projectContextYaml) {
+      renderer.info(projectContextYaml);
+    }
 
     // Render historical context (previous session)
     const sessionContextMarkdown = sessionSummaryFormatter.format(
