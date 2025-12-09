@@ -54,6 +54,18 @@ export async function goalComplete(options: { goalId: string }, container: Appli
     // 3. Fetch updated view for display
     const view = await container.goalCompletedProjector.findById(result.goalId);
 
+    // 4. Append closing LLM instruction
+    renderer.info("---\n");
+
+    const llmInstruction = [
+      "@LLM: Were there any project critical decisions made, invariants discovered, ",
+      "guidelines established, architectural patterns identified or established, component changes made, ",
+      "during the execution of this goal? If so, generalize them for completeness and conciseness.",
+      "Make them as dense and compact as possible, and propose them as additions to be added to jumbo's memory.",
+      "IMPORTANT: Run 'jumbo --help' to explore available commands.",
+    ];
+    renderer.info(llmInstruction.join("\n"));
+
     // Success output
     renderer.success("Goal completed", {
       goalId: result.goalId,

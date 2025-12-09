@@ -87,7 +87,7 @@ export async function sessionStart(
       "For example, \"I can see we've recently worked on X, Y, Z. ",
       "Everything was completed without blockers. Goals A, B, and N ",
       "are planned. Do you want to start with A, or something else?\"",
-      "IMPORTANT: Run 'jumbo goal start' before doing any work!",
+      "IMPORTANT: Run 'jumbo goal start --goal-id <id>' before doing any work!",
     ];
     renderer.info(llmInstruction.join("\n"));
 
