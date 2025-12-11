@@ -218,18 +218,23 @@ program.helpInformation = function () {
   const jumboRoot = path.join(process.cwd(), ".jumbo");
   const isProjectInit = args.includes("project") && args.includes("init");
   const isSubcommandHelp = (args.includes('--help') || args.includes('-h')) && args.length > 3;
+  // Utility commands (--version, --help) must bypass project initialization
+  // so users can check version/help from any directory
+  const isVersionRequest = args.includes('--version') || args.includes('-V');
 
   // Validation: non-init commands require project to be initialized
-  if (!isProjectInit && !isSubcommandHelp && !(await fs.pathExists(jumboRoot))) {
+  // Exception: version, help, and init commands don't require initialization
+  if (!isProjectInit && !isSubcommandHelp && !isVersionRequest && !(await fs.pathExists(jumboRoot))) {
     const renderer = Renderer.getInstance();
     renderer.error("Project not initialized. Run 'jumbo project init' first.");
     process.exit(1);
   }
 
   // Create container (RAII: resources acquired here)
+  // Skip for help and version requests - they don't need infrastructure
   let container: ApplicationContainer | undefined;
 
-  if (!isSubcommandHelp) {
+  if (!isSubcommandHelp && !isVersionRequest) {
     container = bootstrap(jumboRoot);
   }
 

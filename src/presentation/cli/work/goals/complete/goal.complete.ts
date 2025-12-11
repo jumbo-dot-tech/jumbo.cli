@@ -58,11 +58,14 @@ export async function goalComplete(options: { goalId: string }, container: Appli
     renderer.info("---\n");
 
     const llmInstruction = [
-      "@LLM: Were there any project critical decisions made, invariants discovered, ",
-      "guidelines established, architectural patterns identified or established, component changes made, ",
-      "during the execution of this goal? If so, generalize them for completeness and conciseness.",
-      "Make them as dense and compact as possible, and propose them as additions to be added to jumbo's memory.",
-      "IMPORTANT: Run 'jumbo --help' to explore available commands.",
+      "@LLM: Reflect briefly. Did this goal surface anything that future sessions MUST know?",
+      "Only propose additions if they are:",
+      "  • Universal (applies beyond this specific goal)",
+      "  • Dense (one sentence, no examples unless the example IS the rule)",
+      "  • Actionable (changes how code is written or decisions are made)",
+      "Capturable types: invariant, guideline, decision, component, dependency, architecture.",
+      "If nothing qualifies, say so. Avoid restating what's already captured.",
+      "Run 'jumbo --help' for command details.",
     ];
     renderer.info(llmInstruction.join("\n"));
 
