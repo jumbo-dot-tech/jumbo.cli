@@ -51,7 +51,7 @@ export class InProgressGoalsFormatter {
     return this.yamlFormatter.toYaml({
       inProgressGoals: {
         count: 0,
-        message: "No goals currently in progress. Use 'jumbo goal start' to begin working on a goal.",
+        message: "No goals currently in progress. Use 'jumbo goal start --goal-id <id>' to begin working on a goal.",
       },
     });
   }
