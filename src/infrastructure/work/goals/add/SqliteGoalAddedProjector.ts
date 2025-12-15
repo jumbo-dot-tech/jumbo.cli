@@ -16,8 +16,10 @@ export class SqliteGoalAddedProjector implements IGoalAddedProjector {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO goal_views (
         goalId, objective, successCriteria, scopeIn, scopeOut,
-        boundaries, status, version, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        boundaries, status, version, createdAt, updatedAt,
+        relevantInvariants, relevantGuidelines, relevantDependencies,
+        relevantComponents, architecture, filesToBeCreated, filesToBeChanged
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -30,7 +32,14 @@ export class SqliteGoalAddedProjector implements IGoalAddedProjector {
       event.payload.status,
       event.version,
       event.timestamp,
-      event.timestamp
+      event.timestamp,
+      event.payload.relevantInvariants ? JSON.stringify(event.payload.relevantInvariants) : null,
+      event.payload.relevantGuidelines ? JSON.stringify(event.payload.relevantGuidelines) : null,
+      event.payload.relevantDependencies ? JSON.stringify(event.payload.relevantDependencies) : null,
+      event.payload.relevantComponents ? JSON.stringify(event.payload.relevantComponents) : null,
+      event.payload.architecture ? JSON.stringify(event.payload.architecture) : null,
+      event.payload.filesToBeCreated ? JSON.stringify(event.payload.filesToBeCreated) : null,
+      event.payload.filesToBeChanged ? JSON.stringify(event.payload.filesToBeChanged) : null
     );
   }
 }

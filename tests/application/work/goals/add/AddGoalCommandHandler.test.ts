@@ -110,4 +110,55 @@ describe("AddGoalCommandHandler", () => {
     // Act & Assert
     await expect(handler.execute(command)).rejects.toThrow("Event store failure");
   });
+
+  it("should pass embedded context fields to domain", async () => {
+    // Arrange
+    const command: AddGoalCommand = {
+      objective: "Implement feature with context",
+      successCriteria: ["Feature complete"],
+      relevantInvariants: [{ title: "DRY", description: "Don't repeat yourself" }],
+      relevantGuidelines: [{ title: "TypeScript", description: "Use strict mode" }],
+      relevantDependencies: [{ consumer: "ModuleA", provider: "ModuleB" }],
+      relevantComponents: [{ name: "FeatureService", responsibility: "Handle feature logic" }],
+      architecture: { description: "Clean Architecture", organization: "By layer" },
+      filesToBeCreated: ["src/feature/service.ts"],
+      filesToBeChanged: ["src/index.ts"],
+    };
+
+    // Act
+    const result = await handler.execute(command);
+
+    // Assert
+    expect(result.goalId).toMatch(/^goal_[0-9a-f-]+$/);
+
+    const appendedEvent = (eventWriter.append as jest.Mock).mock.calls[0][0];
+    expect(appendedEvent.payload.relevantInvariants).toEqual(command.relevantInvariants);
+    expect(appendedEvent.payload.relevantGuidelines).toEqual(command.relevantGuidelines);
+    expect(appendedEvent.payload.relevantDependencies).toEqual(command.relevantDependencies);
+    expect(appendedEvent.payload.relevantComponents).toEqual(command.relevantComponents);
+    expect(appendedEvent.payload.architecture).toEqual(command.architecture);
+    expect(appendedEvent.payload.filesToBeCreated).toEqual(command.filesToBeCreated);
+    expect(appendedEvent.payload.filesToBeChanged).toEqual(command.filesToBeChanged);
+  });
+
+  it("should not include embedded context when not provided", async () => {
+    // Arrange
+    const command: AddGoalCommand = {
+      objective: "Simple goal",
+      successCriteria: ["Done"],
+    };
+
+    // Act
+    await handler.execute(command);
+
+    // Assert
+    const appendedEvent = (eventWriter.append as jest.Mock).mock.calls[0][0];
+    expect(appendedEvent.payload.relevantInvariants).toBeUndefined();
+    expect(appendedEvent.payload.relevantGuidelines).toBeUndefined();
+    expect(appendedEvent.payload.relevantDependencies).toBeUndefined();
+    expect(appendedEvent.payload.relevantComponents).toBeUndefined();
+    expect(appendedEvent.payload.architecture).toBeUndefined();
+    expect(appendedEvent.payload.filesToBeCreated).toBeUndefined();
+    expect(appendedEvent.payload.filesToBeChanged).toBeUndefined();
+  });
 });

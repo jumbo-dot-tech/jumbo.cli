@@ -9,37 +9,22 @@ import { SCOPE_RULES } from "./rules/ScopeRules.js";
 import { UPDATE_RULES } from "./rules/UpdateRules.js";
 import { NOTE_RULES, OPTIONAL_NOTE_RULES } from "./rules/NoteRules.js";
 import { CanBlockRule, CanUnblockRule } from "./rules/StateTransitionRules.js";
+import {
+  EmbeddedInvariant,
+  EmbeddedGuideline,
+  EmbeddedDependency,
+  EmbeddedComponent,
+  EmbeddedArchitecture,
+} from "./EmbeddedContextTypes.js";
 
-// Embedded context types - based on aggregate state models
-export interface EmbeddedInvariant {
-  title: string;
-  description: string;
-  rationale?: string;
-}
-
-export interface EmbeddedGuideline {
-  title: string;
-  description: string;
-  rationale?: string;
-  examples?: string[];
-}
-
-export interface EmbeddedDependency {
-  consumer: string;  // component name
-  provider: string;  // component name
-}
-
-export interface EmbeddedComponent {
-  name: string;
-  responsibility: string;
-}
-
-export interface EmbeddedArchitecture {
-  description: string;
-  organization: string;
-  patterns?: string[];
-  principles?: string[];
-}
+// Re-export embedded context types for consumers
+export {
+  EmbeddedInvariant,
+  EmbeddedGuideline,
+  EmbeddedDependency,
+  EmbeddedComponent,
+  EmbeddedArchitecture,
+} from "./EmbeddedContextTypes.js";
 
 // Domain state: business properties + aggregate metadata
 export interface GoalState extends AggregateState {
@@ -82,27 +67,26 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         state.boundaries = e.payload.boundaries;
         state.status = e.payload.status;
         // Embedded context fields (optional - populated with --interactive)
-        const payload = e.payload as Record<string, unknown>;
-        if (payload.relevantInvariants !== undefined) {
-          state.relevantInvariants = payload.relevantInvariants as EmbeddedInvariant[];
+        if (e.payload.relevantInvariants !== undefined) {
+          state.relevantInvariants = e.payload.relevantInvariants;
         }
-        if (payload.relevantGuidelines !== undefined) {
-          state.relevantGuidelines = payload.relevantGuidelines as EmbeddedGuideline[];
+        if (e.payload.relevantGuidelines !== undefined) {
+          state.relevantGuidelines = e.payload.relevantGuidelines;
         }
-        if (payload.relevantDependencies !== undefined) {
-          state.relevantDependencies = payload.relevantDependencies as EmbeddedDependency[];
+        if (e.payload.relevantDependencies !== undefined) {
+          state.relevantDependencies = e.payload.relevantDependencies;
         }
-        if (payload.relevantComponents !== undefined) {
-          state.relevantComponents = payload.relevantComponents as EmbeddedComponent[];
+        if (e.payload.relevantComponents !== undefined) {
+          state.relevantComponents = e.payload.relevantComponents;
         }
-        if (payload.architecture !== undefined) {
-          state.architecture = payload.architecture as EmbeddedArchitecture;
+        if (e.payload.architecture !== undefined) {
+          state.architecture = e.payload.architecture;
         }
-        if (payload.filesToBeCreated !== undefined) {
-          state.filesToBeCreated = payload.filesToBeCreated as string[];
+        if (e.payload.filesToBeCreated !== undefined) {
+          state.filesToBeCreated = e.payload.filesToBeCreated;
         }
-        if (payload.filesToBeChanged !== undefined) {
-          state.filesToBeChanged = payload.filesToBeChanged as string[];
+        if (e.payload.filesToBeChanged !== undefined) {
+          state.filesToBeChanged = e.payload.filesToBeChanged;
         }
         state.version = e.version;
         break;
@@ -242,7 +226,16 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
     successCriteria: string[],
     scopeIn?: string[],
     scopeOut?: string[],
-    boundaries?: string[]
+    boundaries?: string[],
+    embeddedContext?: {
+      relevantInvariants?: EmbeddedInvariant[];
+      relevantGuidelines?: EmbeddedGuideline[];
+      relevantDependencies?: EmbeddedDependency[];
+      relevantComponents?: EmbeddedComponent[];
+      architecture?: EmbeddedArchitecture;
+      filesToBeCreated?: string[];
+      filesToBeChanged?: string[];
+    }
   ): GoalAddedEvent {
     // State validation: goal can only be defined once (version must be 0)
     if (this.state.version > 0) {
@@ -265,7 +258,15 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         scopeIn: scopeIn || [],
         scopeOut: scopeOut || [],
         boundaries: boundaries || [],
-        status: GoalStatus.TODO
+        status: GoalStatus.TODO,
+        // Embedded context fields (optional)
+        ...(embeddedContext?.relevantInvariants && { relevantInvariants: embeddedContext.relevantInvariants }),
+        ...(embeddedContext?.relevantGuidelines && { relevantGuidelines: embeddedContext.relevantGuidelines }),
+        ...(embeddedContext?.relevantDependencies && { relevantDependencies: embeddedContext.relevantDependencies }),
+        ...(embeddedContext?.relevantComponents && { relevantComponents: embeddedContext.relevantComponents }),
+        ...(embeddedContext?.architecture && { architecture: embeddedContext.architecture }),
+        ...(embeddedContext?.filesToBeCreated && { filesToBeCreated: embeddedContext.filesToBeCreated }),
+        ...(embeddedContext?.filesToBeChanged && { filesToBeChanged: embeddedContext.filesToBeChanged }),
       },
       Goal.apply
     ) as GoalAddedEvent;

@@ -7,6 +7,19 @@ import { Goal, GoalState } from "../../../../src/domain/work/goals/Goal";
 import { GoalAddedEvent, GoalStartedEvent, GoalCompletedEvent } from "../../../../src/domain/work/goals/EventIndex";
 import { GoalEventType, GoalStatus } from "../../../../src/domain/work/goals/Constants";
 
+function createEmptyGoalState(id: string): GoalState {
+  return {
+    id,
+    objective: "",
+    successCriteria: [],
+    scopeIn: [],
+    scopeOut: [],
+    boundaries: [],
+    status: GoalStatus.TODO,
+    version: 0,
+  };
+}
+
 describe("Goal", () => {
   describe("apply()", () => {
     it("should apply GoalAddedEvent event correctly", () => {
@@ -48,6 +61,77 @@ describe("Goal", () => {
       expect(state.boundaries).toEqual(["No breaking changes"]);
       expect(state.status).toBe(GoalStatus.TODO);
       expect(state.version).toBe(1);
+    });
+
+    it("should apply GoalAddedEvent event with embedded context fields", () => {
+      // Arrange
+      const state = createEmptyGoalState("goal_123");
+
+      const event: GoalAddedEvent = {
+        type: GoalEventType.ADDED,
+        aggregateId: "goal_123",
+        version: 1,
+        timestamp: new Date().toISOString(),
+        payload: {
+          objective: "Implement feature",
+          successCriteria: ["Feature works"],
+          scopeIn: [],
+          scopeOut: [],
+          boundaries: [],
+          status: GoalStatus.TODO,
+          relevantInvariants: [{ title: "SOLID", description: "Follow SOLID principles" }],
+          relevantGuidelines: [{ title: "Testing", description: "Write tests first" }],
+          relevantDependencies: [{ consumer: "ServiceA", provider: "ServiceB" }],
+          relevantComponents: [{ name: "FeatureModule", responsibility: "Handle feature" }],
+          architecture: { description: "Microservices", organization: "By domain" },
+          filesToBeCreated: ["src/feature/index.ts"],
+          filesToBeChanged: ["src/main.ts"],
+        },
+      };
+
+      // Act
+      Goal.apply(state, event);
+
+      // Assert
+      expect(state.relevantInvariants).toEqual([{ title: "SOLID", description: "Follow SOLID principles" }]);
+      expect(state.relevantGuidelines).toEqual([{ title: "Testing", description: "Write tests first" }]);
+      expect(state.relevantDependencies).toEqual([{ consumer: "ServiceA", provider: "ServiceB" }]);
+      expect(state.relevantComponents).toEqual([{ name: "FeatureModule", responsibility: "Handle feature" }]);
+      expect(state.architecture).toEqual({ description: "Microservices", organization: "By domain" });
+      expect(state.filesToBeCreated).toEqual(["src/feature/index.ts"]);
+      expect(state.filesToBeChanged).toEqual(["src/main.ts"]);
+    });
+
+    it("should not set embedded context fields when not provided in event", () => {
+      // Arrange
+      const state = createEmptyGoalState("goal_123");
+
+      const event: GoalAddedEvent = {
+        type: GoalEventType.ADDED,
+        aggregateId: "goal_123",
+        version: 1,
+        timestamp: new Date().toISOString(),
+        payload: {
+          objective: "Simple goal",
+          successCriteria: ["Done"],
+          scopeIn: [],
+          scopeOut: [],
+          boundaries: [],
+          status: GoalStatus.TODO,
+        },
+      };
+
+      // Act
+      Goal.apply(state, event);
+
+      // Assert - embedded context fields should remain undefined
+      expect(state.relevantInvariants).toBeUndefined();
+      expect(state.relevantGuidelines).toBeUndefined();
+      expect(state.relevantDependencies).toBeUndefined();
+      expect(state.relevantComponents).toBeUndefined();
+      expect(state.architecture).toBeUndefined();
+      expect(state.filesToBeCreated).toBeUndefined();
+      expect(state.filesToBeChanged).toBeUndefined();
     });
 
     it("should apply GoalStartedEvent event correctly", () => {

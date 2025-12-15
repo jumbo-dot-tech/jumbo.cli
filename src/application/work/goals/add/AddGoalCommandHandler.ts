@@ -23,13 +23,33 @@ export class AddGoalCommandHandler {
     // Create new aggregate
     const goal = Goal.create(goalId);
 
+    // Build embedded context if any fields are provided
+    const embeddedContext = (
+      command.relevantInvariants ||
+      command.relevantGuidelines ||
+      command.relevantDependencies ||
+      command.relevantComponents ||
+      command.architecture ||
+      command.filesToBeCreated ||
+      command.filesToBeChanged
+    ) ? {
+      relevantInvariants: command.relevantInvariants,
+      relevantGuidelines: command.relevantGuidelines,
+      relevantDependencies: command.relevantDependencies,
+      relevantComponents: command.relevantComponents,
+      architecture: command.architecture,
+      filesToBeCreated: command.filesToBeCreated,
+      filesToBeChanged: command.filesToBeChanged,
+    } : undefined;
+
     // Domain logic produces event
     const event = goal.add(
       command.objective,
       command.successCriteria,
       command.scopeIn,
       command.scopeOut,
-      command.boundaries
+      command.boundaries,
+      embeddedContext
     );
 
     // Persist event to file store

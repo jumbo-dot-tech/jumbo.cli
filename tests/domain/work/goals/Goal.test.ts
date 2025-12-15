@@ -160,6 +160,76 @@ describe("Goal Aggregate", () => {
       expect(snapshot.status).toBe(GoalStatus.TODO);
       expect(snapshot.version).toBe(1);
     });
+
+    it("should create GoalAddedEvent with embedded context fields", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      const embeddedContext = {
+        relevantInvariants: [{ title: "Single Responsibility", description: "One reason to change" }],
+        relevantGuidelines: [{ title: "Use TypeScript", description: "All code in TS", examples: ["const x: string"] }],
+        relevantDependencies: [{ consumer: "AuthController", provider: "UserService" }],
+        relevantComponents: [{ name: "AuthController", responsibility: "Handle auth requests" }],
+        architecture: { description: "Layered", organization: "By feature", patterns: ["CQRS"] },
+        filesToBeCreated: ["src/auth/AuthController.ts"],
+        filesToBeChanged: ["src/app.ts"],
+      };
+
+      // Act
+      const event = goal.add(
+        "Implement authentication",
+        ["Users can log in"],
+        ["AuthController"],
+        [],
+        [],
+        embeddedContext
+      );
+
+      // Assert
+      expect(event.payload.relevantInvariants).toEqual(embeddedContext.relevantInvariants);
+      expect(event.payload.relevantGuidelines).toEqual(embeddedContext.relevantGuidelines);
+      expect(event.payload.relevantDependencies).toEqual(embeddedContext.relevantDependencies);
+      expect(event.payload.relevantComponents).toEqual(embeddedContext.relevantComponents);
+      expect(event.payload.architecture).toEqual(embeddedContext.architecture);
+      expect(event.payload.filesToBeCreated).toEqual(embeddedContext.filesToBeCreated);
+      expect(event.payload.filesToBeChanged).toEqual(embeddedContext.filesToBeChanged);
+    });
+
+    it("should update aggregate state with embedded context fields", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      const embeddedContext = {
+        relevantInvariants: [{ title: "DRY", description: "Don't repeat yourself" }],
+        filesToBeCreated: ["src/utils/helper.ts"],
+      };
+
+      // Act
+      goal.add("Add utility", ["Helper exists"], [], [], [], embeddedContext);
+
+      // Assert
+      const snapshot = goal.snapshot;
+      expect(snapshot.relevantInvariants).toEqual(embeddedContext.relevantInvariants);
+      expect(snapshot.filesToBeCreated).toEqual(embeddedContext.filesToBeCreated);
+      // Fields not provided should be undefined
+      expect(snapshot.relevantGuidelines).toBeUndefined();
+      expect(snapshot.architecture).toBeUndefined();
+    });
+
+    it("should create GoalAddedEvent without embedded context when not provided", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+
+      // Act
+      const event = goal.add("Simple goal", ["Done"]);
+
+      // Assert - embedded context fields should be undefined
+      expect(event.payload.relevantInvariants).toBeUndefined();
+      expect(event.payload.relevantGuidelines).toBeUndefined();
+      expect(event.payload.relevantDependencies).toBeUndefined();
+      expect(event.payload.relevantComponents).toBeUndefined();
+      expect(event.payload.architecture).toBeUndefined();
+      expect(event.payload.filesToBeCreated).toBeUndefined();
+      expect(event.payload.filesToBeChanged).toBeUndefined();
+    });
   });
 
   describe("start()", () => {
