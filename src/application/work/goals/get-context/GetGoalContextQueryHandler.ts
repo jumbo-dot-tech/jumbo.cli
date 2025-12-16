@@ -1,5 +1,11 @@
 import { IGoalContextReader } from "./IGoalContextReader.js";
-import { GoalContextView } from "./GoalContextView.js";
+import {
+  GoalContextView,
+  InvariantContextView,
+  GuidelineContextView,
+  ComponentContextView,
+  DependencyContextView,
+} from "./GoalContextView.js";
 import { IComponentContextReader } from "./IComponentContextReader.js";
 import { IDependencyContextReader } from "./IDependencyContextReader.js";
 import { IDecisionContextReader } from "./IDecisionContextReader.js";
@@ -7,6 +13,7 @@ import { IInvariantContextReader } from "./IInvariantContextReader.js";
 import { IGuidelineContextReader } from "./IGuidelineContextReader.js";
 import { IRelationReader } from "../../../relations/IRelationReader.js";
 import { InvariantView } from "../../../solution/invariants/InvariantView.js";
+import { GoalView } from "../GoalView.js";
 
 /**
  * GetGoalContextQueryHandler - Query handler for goal context retrieval
@@ -34,6 +41,9 @@ export class GetGoalContextQueryHandler {
   /**
    * Execute the query to get goal context
    *
+   * Prefers embedded context when available (from --interactive goal creation).
+   * Falls back to querying all context when embedded fields are empty/null.
+   *
    * @param goalId - ID of the goal to get context for
    * @returns GoalContextView with all context data
    * @throws Error if goal not found
@@ -46,21 +56,33 @@ export class GetGoalContextQueryHandler {
       throw new Error(`Goal not found: ${goalId}`);
     }
 
-    // Phase 2: Filter components by scope
-    const components = await this.filterComponents(goal.scopeIn, goal.scopeOut);
+    // Phase 2: Get components - prefer embedded, else filter by scope
+    const components = this.hasEmbeddedComponents(goal)
+      ? this.mapEmbeddedComponents(goal.relevantComponents!)
+      : await this.filterComponents(goal.scopeIn, goal.scopeOut);
 
-    // Phase 2: Get dependencies for scoped components
-    const dependencies = await this.filterDependencies(components);
+    // Phase 2: Get dependencies - prefer embedded, else filter by scoped components
+    const dependencies = this.hasEmbeddedDependencies(goal)
+      ? this.mapEmbeddedDependencies(goal.relevantDependencies!)
+      : await this.filterDependencies(components);
 
-    // Phase 2: Get active decisions
+    // Phase 2: Get active decisions (no embedded field for decisions)
     const decisions = await this.getDecisions();
 
-    // Phase 3: Get invariants and guidelines
-    const invariants = await this.getInvariants();
-    const guidelines = await this.getGuidelines();
+    // Phase 3: Get invariants - prefer embedded, else query all
+    const invariants = this.hasEmbeddedInvariants(goal)
+      ? this.mapEmbeddedInvariants(goal.relevantInvariants!)
+      : await this.getInvariants();
 
-    // Phase 4: Get relations
-    const relations = await this.getRelations(components);
+    // Phase 3: Get guidelines - prefer embedded, else query all
+    const guidelines = this.hasEmbeddedGuidelines(goal)
+      ? this.mapEmbeddedGuidelines(goal.relevantGuidelines!)
+      : await this.getGuidelines();
+
+    // Phase 4: Get relations (only when using queried components)
+    const relations = this.hasEmbeddedComponents(goal)
+      ? []
+      : await this.getRelations(components);
 
     return {
       goal,
@@ -71,6 +93,79 @@ export class GetGoalContextQueryHandler {
       guidelines,
       relations,
     };
+  }
+
+  /**
+   * Check if goal has embedded invariants
+   */
+  private hasEmbeddedInvariants(goal: GoalView): boolean {
+    return Array.isArray(goal.relevantInvariants) && goal.relevantInvariants.length > 0;
+  }
+
+  /**
+   * Check if goal has embedded guidelines
+   */
+  private hasEmbeddedGuidelines(goal: GoalView): boolean {
+    return Array.isArray(goal.relevantGuidelines) && goal.relevantGuidelines.length > 0;
+  }
+
+  /**
+   * Check if goal has embedded components
+   */
+  private hasEmbeddedComponents(goal: GoalView): boolean {
+    return Array.isArray(goal.relevantComponents) && goal.relevantComponents.length > 0;
+  }
+
+  /**
+   * Check if goal has embedded dependencies
+   */
+  private hasEmbeddedDependencies(goal: GoalView): boolean {
+    return Array.isArray(goal.relevantDependencies) && goal.relevantDependencies.length > 0;
+  }
+
+  /**
+   * Map embedded invariants to InvariantContextView format
+   */
+  private mapEmbeddedInvariants(invariants: NonNullable<GoalView["relevantInvariants"]>): InvariantContextView[] {
+    return invariants.map((inv, index) => ({
+      invariantId: `embedded_inv_${index}`,
+      category: inv.title,
+      description: inv.description,
+    }));
+  }
+
+  /**
+   * Map embedded guidelines to GuidelineContextView format
+   */
+  private mapEmbeddedGuidelines(guidelines: NonNullable<GoalView["relevantGuidelines"]>): GuidelineContextView[] {
+    return guidelines.map((g, index) => ({
+      guidelineId: `embedded_guide_${index}`,
+      category: g.title,
+      description: g.description,
+    }));
+  }
+
+  /**
+   * Map embedded components to ComponentContextView format
+   */
+  private mapEmbeddedComponents(components: NonNullable<GoalView["relevantComponents"]>): ComponentContextView[] {
+    return components.map((c, index) => ({
+      componentId: `embedded_comp_${index}`,
+      name: c.name,
+      description: c.responsibility,
+      status: "active",
+    }));
+  }
+
+  /**
+   * Map embedded dependencies to DependencyContextView format
+   */
+  private mapEmbeddedDependencies(dependencies: NonNullable<GoalView["relevantDependencies"]>): DependencyContextView[] {
+    return dependencies.map((d, index) => ({
+      dependencyId: `embedded_dep_${index}`,
+      name: `${d.consumer} → ${d.provider}`,
+      purpose: "Architectural dependency",
+    }));
   }
 
   /**

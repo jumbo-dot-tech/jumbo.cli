@@ -32,6 +32,14 @@ export class SqliteGoalContextReader implements IGoalContextReader {
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       note: row.note || undefined,
+      // Embedded context fields
+      relevantInvariants: row.relevantInvariants ? JSON.parse(row.relevantInvariants) : undefined,
+      relevantGuidelines: row.relevantGuidelines ? JSON.parse(row.relevantGuidelines) : undefined,
+      relevantDependencies: row.relevantDependencies ? JSON.parse(row.relevantDependencies) : undefined,
+      relevantComponents: row.relevantComponents ? JSON.parse(row.relevantComponents) : undefined,
+      architecture: row.architecture ? JSON.parse(row.architecture) : undefined,
+      filesToBeCreated: row.filesToBeCreated ? JSON.parse(row.filesToBeCreated) : undefined,
+      filesToBeChanged: row.filesToBeChanged ? JSON.parse(row.filesToBeChanged) : undefined,
     };
   }
 }
