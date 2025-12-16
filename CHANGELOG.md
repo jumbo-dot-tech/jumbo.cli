@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Database rebuild now correctly projects all events**: Fixed a bug where historical
+  events stored with short type names (e.g., `GoalCompleted`) were not being projected
+  during `jumbo db rebuild`. Events are now properly matched to their handlers.
+
+### Added
+
+- **Event type migration script**: Added `scripts/migrations/001-normalize-event-types.js`
+  to fix legacy events with missing `Event` suffix in their type field.
+
+### Migration Required
+
+If you used earlier alpha versions and have existing event data, run the migration
+script before rebuilding your database:
+
+```bash
+# Preview changes (recommended first)
+node scripts/migrations/001-normalize-event-types.js --dry-run
+
+# Apply changes
+node scripts/migrations/001-normalize-event-types.js
+
+# Rebuild database
+jumbo db rebuild --yes
+```
+
 ## [1.0.0-alpha.7] - 2025-12-11
 
 ### Breaking Changes
