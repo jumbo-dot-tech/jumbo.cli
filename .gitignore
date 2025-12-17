@@ -148,3 +148,6 @@ vite.config.ts.timestamp-*
 # Github
 .github/*
 !.github/copilot-instructions.md
+
+# Agent generated files
+nul
