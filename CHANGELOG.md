@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.0.0-alpha.8] - 2025-12-18
+
 ### Fixed
 
 - **Database rebuild now correctly projects all events**: Fixed a bug where historical
