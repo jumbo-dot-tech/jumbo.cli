@@ -93,7 +93,7 @@ Optimized context packets delivered to your AI agents.
 
 ```bash
 # Install globally
-npm install -g @jumbo-ctx/cli
+npm install -g jumbo-cli
 
 # Initialize in your project
 jumbo project init
