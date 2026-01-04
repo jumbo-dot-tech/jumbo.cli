@@ -83,6 +83,10 @@ export const metadata: CommandMetadata = {
     {
       flags: "--files-to-be-changed <items...>",
       description: "Files to be changed"
+    },
+    {
+      flags: "--next-goal <goalId>",
+      description: "Update the NextGoal property (chains to specified goal after completion)"
     }
   ],
   examples: [
@@ -122,6 +126,7 @@ export async function goalUpdate(
     architecture?: string;
     filesToBeCreated?: string[];
     filesToBeChanged?: string[];
+    nextGoal?: string;
   },
   container: ApplicationContainer
 ) {
@@ -162,6 +167,7 @@ export async function goalUpdate(
       architecture: parseJson(options.architecture, "architecture"),
       filesToBeCreated: options.filesToBeCreated,
       filesToBeChanged: options.filesToBeChanged,
+      nextGoalId: options.nextGoal,
     };
 
     const result = await commandHandler.execute(command);
