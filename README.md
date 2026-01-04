@@ -36,6 +36,48 @@ Context engineering alleviates the pain, but has you focused on the wrong things
 Jumbo is a CLI tool that gives your coding agent memory like an... well, <span style="font-size: 1.5rem;">🐘</span>. <br>
 It keeps your agent on track, and you focused on what you want to build.
 
+### Seen in Action
+
+**Before Jumbo:**
+
+```
+Monday - Claude Code CLI:
+You: 
+   "I'm building an Event Driven distributed system..."
+Claude: 
+   *helps for 2 hours*
+
+Tuesday - New chat:
+You: 
+   "Continue working on my Event Driven distributed system"
+Claude: 
+   "What Event Driven distributed system? Can you describe your project?"
+You: 
+   *spends 20 minutes re-explaining everything*
+```
+
+**After Jumbo:**
+
+```
+Monday - Claude Code CLI:
+You: 
+   "I'm building an Event Driven distributed system..."
+Claude: 
+   *helps for 2 hours*
+
+Tuesday - New chat (or different AI tool):
+You: 
+   "Hi"  
+Claude:
+   "Hi! I can see we have 2 planned goals ready to work on:
+
+     - Model the Auth domain
+     - Implement Auth abstractions
+
+    Would you like to start with one of these goals, or did you have something else in mind?"
+```
+
+### Seen in Benefits
 - **Tracks project details**  
 Important aspects of you project are stored, retrievable, and mutable.  
 <sub>(see below)</sub>
