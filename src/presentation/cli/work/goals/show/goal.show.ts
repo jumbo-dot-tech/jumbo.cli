@@ -112,6 +112,10 @@ export async function goalShow(
         }
       }
 
+      if (goal.nextGoalId) {
+        console.log(`\nNext Goal:  ${goal.nextGoalId}`);
+      }
+
       console.log("");
     } else {
       // Structured output for programmatic consumers
@@ -126,7 +130,8 @@ export async function goalShow(
         version: goal.version,
         createdAt: goal.createdAt,
         updatedAt: goal.updatedAt,
-        note: goal.note
+        note: goal.note,
+        nextGoalId: goal.nextGoalId
       });
     }
   } catch (error) {

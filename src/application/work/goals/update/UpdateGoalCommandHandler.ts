@@ -41,7 +41,8 @@ export class UpdateGoalCommandHandler {
       command.relevantComponents !== undefined ||
       command.architecture !== undefined ||
       command.filesToBeCreated !== undefined ||
-      command.filesToBeChanged !== undefined
+      command.filesToBeChanged !== undefined ||
+      command.nextGoalId !== undefined
     ) ? {
       relevantInvariants: command.relevantInvariants,
       relevantGuidelines: command.relevantGuidelines,
@@ -50,6 +51,7 @@ export class UpdateGoalCommandHandler {
       architecture: command.architecture,
       filesToBeCreated: command.filesToBeCreated,
       filesToBeChanged: command.filesToBeChanged,
+      nextGoalId: command.nextGoalId,
     } : undefined;
 
     // 4. Domain logic produces event
