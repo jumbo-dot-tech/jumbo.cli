@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-01-10
+
+### Added
+
+- **List commands**: Added `list` subcommand to all entity commands for viewing stored data:
+  - `jumbo audience list` - List all audiences
+  - `jumbo audience-pain list` - List all audience pains
+  - `jumbo value list` - List all value propositions
+  - `jumbo relation list` - List all relations
+  - `jumbo component list` - List all components
+  - `jumbo decision list` - List all decisions
+  - `jumbo dependency list` - List all dependencies
+  - `jumbo guideline list` - List all guidelines
+  - `jumbo invariant list` - List all invariants
+  - `jumbo session list` - List all sessions
+
+- **Agent configurer hook support**: Claude and Gemini configurers now support full hook configuration with intelligent merging that preserves existing user settings.
+
+### Changed
+
+- **Internal refactoring**: Migrated bootstrap composition from infrastructure to presentation layer for cleaner architecture.
+
+### Removed
+
+- **Cursor agent configurer**: Removed Cursor-specific agent configuration since Cursor now supports AGENTS.md natively.
+
 ## [1.0.0-beta.1] - 2026-01-05
 
 ### Added
