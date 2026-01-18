@@ -266,6 +266,11 @@ import { IGoalRemoveReader } from "../../../application/work/goals/remove/IGoalR
 import { IGoalContextReader } from "../../../application/work/goals/get-context/IGoalContextReader.js";
 import { IGoalStatusReader } from "../../../application/work/goals/IGoalStatusReader.js";
 import { IGoalReadForSessionSummary } from "../../../application/work/sessions/get-context/IGoalReadForSessionSummary.js";
+// Goal Controllers
+import { CompleteGoalController } from "../../../application/work/goals/complete/CompleteGoalController.js";
+import { CompleteGoalCommandHandler } from "../../../application/work/goals/complete/CompleteGoalCommandHandler.js";
+import { CompleteGoalPromptService } from "../../../application/work/goals/complete/CompleteGoalPromptService.js";
+import { GetGoalContextQueryHandler } from "../../../application/work/goals/get-context/GetGoalContextQueryHandler.js";
 import { IDecisionAddedProjector } from "../../../application/solution/decisions/add/IDecisionAddedProjector.js";
 import { IDecisionUpdatedProjector } from "../../../application/solution/decisions/update/IDecisionUpdatedProjector.js";
 import { IDecisionUpdateReader } from "../../../application/solution/decisions/update/IDecisionUpdateReader.js";
@@ -486,6 +491,8 @@ export interface ApplicationContainer {
   goalRemovedProjector: IGoalRemovedProjector & IGoalRemoveReader;
   goalContextReader: IGoalContextReader;
   goalStatusReader: IGoalStatusReader & IGoalReadForSessionSummary;
+  // Goal Controllers
+  completeGoalController: CompleteGoalController;
 
   // Solution Category - Event Stores
   // Architecture Event Stores - decomposed by use case
@@ -807,6 +814,34 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   const relationListReader = new SqliteRelationListReader(db);
 
   // ============================================================
+  // STEP 5: Create Application Services / Controllers
+  // ============================================================
+
+  // Goal Controllers
+  const completeGoalPromptService = new CompleteGoalPromptService();
+  const completeGoalCommandHandler = new CompleteGoalCommandHandler(
+    goalCompletedEventStore,
+    goalCompletedEventStore,
+    goalCompletedProjector,
+    eventBus
+  );
+  const getGoalContextQueryHandler = new GetGoalContextQueryHandler(
+    goalContextReader,
+    componentContextReader,
+    dependencyContextReader,
+    decisionContextReader,
+    invariantContextReader,
+    guidelineContextReader,
+    relationRemovedProjector
+  );
+  const completeGoalController = new CompleteGoalController(
+    completeGoalCommandHandler,
+    getGoalContextQueryHandler,
+    goalCompletedProjector,
+    completeGoalPromptService
+  );
+
+  // ============================================================
   // STEP 5: Create Projection Handlers (Event Subscribers)
   // ============================================================
 
@@ -1014,6 +1049,8 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     goalRemovedProjector,
     goalContextReader,
     goalStatusReader,
+    // Goal Controllers
+    completeGoalController,
 
     // Solution Category
     // Architecture Event Stores - decomposed by use case

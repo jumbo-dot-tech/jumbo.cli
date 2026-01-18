@@ -1,14 +1,17 @@
 /**
  * CLI Command: jumbo goal complete
  *
- * Marks a goal as completed (transitions status from 'doing' or 'blocked' to 'completed').
+ * Handles goal completion requests.
+ * - Without --commit: Triggers QA verification against goal criteria
+ * - With --commit: Completes the goal and prompts for learnings
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
 import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
-import { CompleteGoalCommandHandler } from "../../../../../application/work/goals/complete/CompleteGoalCommandHandler.js";
-import { CompleteGoalCommand } from "../../../../../application/work/goals/complete/CompleteGoalCommand.js";
+import { CompleteGoalController } from "../../../../../application/work/goals/complete/CompleteGoalController.js";
+import { CompleteGoalRequest } from "../../../../../application/work/goals/complete/CompleteGoalRequest.js";
+import { GoalContextFormatter } from "../start/GoalContextFormatter.js";
 
 /**
  * Command metadata for auto-registration
@@ -22,10 +25,20 @@ export const metadata: CommandMetadata = {
       description: "ID of the goal to complete"
     }
   ],
+  options: [
+    {
+      flags: "--commit",
+      description: "Commit the completion (without this flag, triggers Quality Assurance check)"
+    }
+  ],
   examples: [
     {
       command: "jumbo goal complete --goal-id goal_abc123",
-      description: "Complete a goal"
+      description: "Verify work against goal criteria"
+    },
+    {
+      command: "jumbo goal complete --goal-id goal_abc123 --commit",
+      description: "Complete the goal after QA verification"
     }
   ],
   related: ["goal add", "goal start", "goal block"]
@@ -35,64 +48,60 @@ export const metadata: CommandMetadata = {
  * Command handler
  * Called by Commander with parsed options
  */
-export async function goalComplete(options: { goalId: string }, container: ApplicationContainer) {
+export async function goalComplete(
+  options: { goalId: string; commit?: boolean },
+  container: ApplicationContainer
+) {
   const renderer = Renderer.getInstance();
 
   try {
-    // 1. Create command handler
-    const commandHandler = new CompleteGoalCommandHandler(
-      container.goalCompletedEventStore,
-      container.goalCompletedEventStore,
-      container.goalCompletedProjector,
-      container.eventBus
-    );
+    // 1. Get controller from container
+    const controller = container.completeGoalController;
 
-    // 2. Execute command
-    const command: CompleteGoalCommand = { goalId: options.goalId };
-    const result = await commandHandler.execute(command);
+    // 2. Create request
+    const request: CompleteGoalRequest = {
+      goalId: options.goalId,
+      commit: options.commit || false,
+    };
 
-    // 3. Fetch updated view for display
-    const view = await container.goalCompletedProjector.findById(result.goalId);
+    // 3. Handle request
+    const response = await controller.handle(request);
 
-    // 4. Append closing LLM instruction
+    // 4. Render response
+
+    // Render criteria if present (QA mode)
+    if (response.criteria) {
+      const formatter = new GoalContextFormatter();
+      const contextYaml = formatter.format(response.criteria);
+      renderer.info("\n" + contextYaml);
+    }
+
+    // Render LLM prompt
     renderer.info("---\n");
+    renderer.info(response.llmPrompt + "\n");
 
-    const llmInstruction = [
-      "@LLM: Reflect briefly. Did this goal surface anything that future sessions MUST know?",
-      "Only propose additions if they are:",
-      "  • Universal (applies beyond this specific goal)",
-      "  • Dense (one sentence, no examples unless the example IS the rule)",
-      "  • Actionable (changes how code is written or decisions are made)",
-      "Capturable types: invariant, guideline, decision, component, dependency, architecture.",
-      "If nothing qualifies, say so. Avoid restating what's already captured.",
-      "Run 'jumbo --help' for command details.",
-    ];
-    renderer.info(llmInstruction.join("\n"));
-
-    // Success output
-    renderer.success("Goal completed", {
-      goalId: result.goalId,
-      objective: view?.objective || options.goalId,
-      status: view?.status || 'completed'
+    // Render goal status
+    const statusMessage = response.criteria ? "Goal verification ready" : "Goal completed";
+    renderer.success(statusMessage, {
+      goalId: response.goalId,
+      objective: response.objective,
+      status: response.status,
     });
 
     // Render next goal if present
-    if (view?.nextGoalId) {
-      const nextGoal = await container.goalCompletedProjector.findById(view.nextGoalId);
-      if (nextGoal) {
-        renderer.info("\n---\n");
-        renderer.info("Next goal in chain:");
-        renderer.success("Suggested next goal", {
-          goalId: nextGoal.goalId,
-          objective: nextGoal.objective,
-          status: nextGoal.status
-        });
-        renderer.info("\nTo start this goal, run:");
-        renderer.info(`  jumbo goal start --goal-id ${nextGoal.goalId}`);
-      }
+    if (response.nextGoal) {
+      renderer.info("\n---\n");
+      renderer.info("Next goal in chain:");
+      renderer.success("Suggested next goal", {
+        goalId: response.nextGoal.goalId,
+        objective: response.nextGoal.objective,
+        status: response.nextGoal.status,
+      });
+      renderer.info("\nTo start this goal, run:");
+      renderer.info(`  jumbo goal start --goal-id ${response.nextGoal.goalId}`);
     }
   } catch (error) {
-    renderer.error("Failed to complete goal", error instanceof Error ? error : String(error));
+    renderer.error("Failed to process goal completion", error instanceof Error ? error : String(error));
     process.exit(1);
   }
   // NO CLEANUP - infrastructure manages itself!
