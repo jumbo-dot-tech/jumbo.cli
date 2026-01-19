@@ -69,6 +69,12 @@ export async function goalComplete(
 
     // 4. Render response
 
+    // Show auto-commit warning if applicable
+    if (response.autoCommittedDueToTurnLimit) {
+      renderer.info("⚠️  Turn limit reached - Goal auto-completed");
+      renderer.info("The QA turn limit has been reached. The goal has been automatically completed.\n");
+    }
+
     // Render criteria if present (QA mode)
     if (response.criteria) {
       const formatter = new GoalContextFormatter();
@@ -79,6 +85,18 @@ export async function goalComplete(
     // Render LLM prompt
     renderer.info("---\n");
     renderer.info(response.llmPrompt + "\n");
+
+    // Show remaining turns if in QA mode
+    if (response.remainingTurns !== undefined) {
+      if (response.remainingTurns === 0) {
+        renderer.info(`⚠️  QA turns remaining: ${response.remainingTurns} (limit will be reached on next attempt)`);
+      } else if (response.remainingTurns === 1) {
+        renderer.info(`⚠️  QA turns remaining: ${response.remainingTurns} (last turn before auto-complete)`);
+      } else {
+        renderer.info(`QA turns remaining: ${response.remainingTurns}`);
+      }
+      renderer.info("");
+    }
 
     // Render goal status
     const statusMessage = response.criteria ? "Goal verification ready" : "Goal completed";

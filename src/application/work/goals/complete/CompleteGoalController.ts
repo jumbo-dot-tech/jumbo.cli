@@ -4,34 +4,48 @@ import { CompleteGoalPromptService } from "./CompleteGoalPromptService.js";
 import { CompleteGoalCommandHandler } from "./CompleteGoalCommandHandler.js";
 import { GetGoalContextQueryHandler } from "../get-context/GetGoalContextQueryHandler.js";
 import { IGoalCompleteReader } from "./IGoalCompleteReader.js";
+import { ReviewTurnTracker } from "./ReviewTurnTracker.js";
+import { IGoalReviewedEventWriter } from "./IGoalReviewedEventWriter.js";
+import { IGoalReviewedEventReader } from "./IGoalReviewedEventReader.js";
+import { IEventBus } from "../../../shared/messaging/IEventBus.js";
+import { Goal } from "../../../../domain/work/goals/Goal.js";
 
 /**
  * CompleteGoalController
  *
  * Controller for goal completion requests (similar to HTTP request controller).
- * Routes requests based on policy (commit flag) and returns structured responses.
+ * Routes requests based on policy (commit flag + turn limit) and returns structured responses.
  *
- * - QA Mode (commit=false): Returns criteria and QA prompt for verification
+ * - QA Mode (commit=false): Returns criteria and QA prompt for verification, records QA attempt
  * - Commit Mode (commit=true): Delegates to CompleteGoalCommandHandler and returns learnings prompt
+ * - Auto-Commit: When turn limit reached, automatically commits regardless of commit flag
  */
 export class CompleteGoalController {
   constructor(
     private readonly completeGoalCommandHandler: CompleteGoalCommandHandler,
     private readonly getGoalContextQueryHandler: GetGoalContextQueryHandler,
     private readonly goalReader: IGoalCompleteReader,
-    private readonly promptService: CompleteGoalPromptService
+    private readonly promptService: CompleteGoalPromptService,
+    private readonly turnTracker: ReviewTurnTracker,
+    private readonly reviewEventWriter: IGoalReviewedEventWriter,
+    private readonly goalEventReader: IGoalReviewedEventReader, // Use for full goal history
+    private readonly eventBus: IEventBus
   ) {}
 
   async handle(request: CompleteGoalRequest): Promise<CompleteGoalResponse> {
-    if (request.commit) {
-      return this.handleCommit(request.goalId);
+    // Check if we should auto-commit due to turn limit
+    const shouldAutoCommit = await this.turnTracker.shouldAutoCommit(request.goalId);
+    const effectiveCommit = request.commit || shouldAutoCommit;
+
+    if (effectiveCommit) {
+      return this.handleCommit(request.goalId, shouldAutoCommit);
     } else {
       return this.handleQA(request.goalId);
     }
   }
 
   /**
-   * Handle QA mode: Return criteria and QA prompt without changing goal state
+   * Handle QA mode: Return criteria and QA prompt, record review
    */
   private async handleQA(goalId: string): Promise<CompleteGoalResponse> {
     // Get current goal view
@@ -40,11 +54,27 @@ export class CompleteGoalController {
       throw new Error(`Goal not found: ${goalId}`);
     }
 
+    // Record review (before incrementing count for next turn)
+    const currentTurnCount = await this.turnTracker.getCurrentTurnCount(goalId);
+    const nextTurnNumber = currentTurnCount + 1;
+
+    // Rehydrate goal to record review
+    const history = await this.goalEventReader.readStream(goalId);
+    const goal = Goal.rehydrate(goalId, history as any);
+    const reviewEvent = goal.recordReview(nextTurnNumber);
+
+    // Persist and publish review event
+    await this.reviewEventWriter.append(reviewEvent);
+    await this.eventBus.publish(reviewEvent);
+
     // Get full goal context (criteria, components, invariants, etc.)
     const goalContext = await this.getGoalContextQueryHandler.execute(goalId);
 
-    // Generate QA prompt
-    const llmPrompt = this.promptService.generateQAPrompt(goalId);
+    // Calculate remaining turns (after recording this attempt)
+    const remainingTurns = await this.turnTracker.getRemainingTurns(goalId);
+
+    // Generate QA prompt with remaining turns
+    const llmPrompt = this.promptService.generateQAPrompt(goalId, remainingTurns);
 
     return {
       goalId,
@@ -52,13 +82,19 @@ export class CompleteGoalController {
       status: goalView.status,
       llmPrompt,
       criteria: goalContext,
+      remainingTurns,
     };
   }
 
   /**
    * Handle Commit mode: Delegate to CompleteGoalCommandHandler and return learnings prompt
+   * @param goalId - The goal ID to complete
+   * @param autoCommitted - True if this was auto-committed due to turn limit
    */
-  private async handleCommit(goalId: string): Promise<CompleteGoalResponse> {
+  private async handleCommit(
+    goalId: string,
+    autoCommitted: boolean = false
+  ): Promise<CompleteGoalResponse> {
     // Delegate to command handler (state change)
     await this.completeGoalCommandHandler.execute({ goalId });
 
@@ -91,6 +127,7 @@ export class CompleteGoalController {
       llmPrompt,
       // No criteria in commit mode (token optimization)
       nextGoal,
+      autoCommittedDueToTurnLimit: autoCommitted || undefined,
     };
   }
 }

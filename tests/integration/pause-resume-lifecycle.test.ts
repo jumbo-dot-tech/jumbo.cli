@@ -27,7 +27,7 @@ describe("Pause-Resume Lifecycle Integration", () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(process.cwd(), "test-pause-resume-"));
-    container = bootstrap(tmpDir);
+    container = await bootstrap(tmpDir);
   });
 
   afterEach(async () => {

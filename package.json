@@ -58,6 +58,7 @@
     "ink": "^3.2.0",
     "inquirer": "^8.2.5",
     "inversify": "^7.10.4",
+    "jsonc-parser": "^3.3.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "reflect-metadata": "^0.2.2",
@@ -83,5 +84,5 @@
   },
   "engines": {
     "node": ">=18.18.0"
-  } 
+  }
 }

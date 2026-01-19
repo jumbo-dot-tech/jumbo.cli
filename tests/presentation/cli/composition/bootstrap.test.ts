@@ -35,8 +35,8 @@ describe("bootstrap", () => {
     await fs.remove(testRoot);
   });
 
-  it("should create a complete application container", () => {
-    container = bootstrap(testRoot);
+  it("should create a complete application container", async () => {
+    container = await bootstrap(testRoot);
 
     // Verify core infrastructure
     expect(container.eventBus).toBeDefined();
@@ -158,8 +158,8 @@ describe("bootstrap", () => {
     expect(container.relationRemovedProjector).toBeDefined();
   });
 
-  it("should NOT expose dbConnectionManager (lifecycle managed by LocalInfrastructureModule)", () => {
-    container = bootstrap(testRoot);
+  it("should NOT expose dbConnectionManager (lifecycle managed by LocalInfrastructureModule)", async () => {
+    container = await bootstrap(testRoot);
 
     // Verify dbConnectionManager is NOT part of the container
     // This ensures presentation layer cannot call dispose()
@@ -167,7 +167,7 @@ describe("bootstrap", () => {
   });
 
   it("should register all projection handlers with event bus", async () => {
-    container = bootstrap(testRoot);
+    container = await bootstrap(testRoot);
 
     // Create a test session event
     const sessionStartedEvent = {
@@ -196,7 +196,7 @@ describe("bootstrap", () => {
   });
 
   it("should handle goal events through registered handlers", async () => {
-    container = bootstrap(testRoot);
+    container = await bootstrap(testRoot);
 
     // Create a test goal event
     const goalAddedEvent = {
@@ -230,8 +230,8 @@ describe("bootstrap", () => {
     expect(goal?.status).toBe("to-do");
   });
 
-  it("should create database connection with proper tables", () => {
-    container = bootstrap(testRoot);
+  it("should create database connection with proper tables", async () => {
+    container = await bootstrap(testRoot);
 
     // Verify database was created
     const dbPath = path.join(testRoot, "jumbo.db");
@@ -248,7 +248,7 @@ describe("bootstrap", () => {
   });
 
   it("should support cross-aggregate projections", async () => {
-    container = bootstrap(testRoot);
+    container = await bootstrap(testRoot);
 
     // Start a session
     const sessionEvent = {

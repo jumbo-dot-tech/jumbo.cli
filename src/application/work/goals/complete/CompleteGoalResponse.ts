@@ -18,4 +18,6 @@ export interface CompleteGoalResponse {
     readonly objective: string;
     readonly status: string;
   };
+  readonly autoCommittedDueToTurnLimit?: boolean; // True if auto-committed due to turn limit
+  readonly remainingTurns?: number; // Number of remaining QA turns (only in QA mode)
 }

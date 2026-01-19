@@ -10,8 +10,9 @@ export class CompleteGoalPromptService {
    * This prompt instructs the LLM to check its work and fix any inconsistencies.
    *
    * @param goalId - The goal ID to include in the prompt
+   * @param remainingTurns - Number of remaining QA turns before auto-commit
    */
-  generateQAPrompt(goalId: string): string {
+  generateQAPrompt(goalId: string, remainingTurns: number): string {
     const lines = [
       "@LLM: Quality Assurance Check",
       "Review your work against the goal criteria below.",
@@ -20,8 +21,24 @@ export class CompleteGoalPromptService {
       "  2. If any criterion is not met, guideline not followed, or invariant not upheld, then fix the issues immediately",
       `  3. Only run 'jumbo goal complete --goal-id ${goalId} --commit' after ALL criteria, guidelines, and invariants are satisfied`,
       "",
-      "This is a verification loop - you MUST ensure all criteria are met before committing.",
+      `You have ${remainingTurns} QA turn(s) remaining.`,
     ];
+
+    if (remainingTurns === 0) {
+      lines.push(
+        "TURN LIMIT REACHED: The goal will be auto-completed on the next 'jumbo goal complete' command."
+      );
+    } else if (remainingTurns === 1) {
+      lines.push(
+        "WARNING: This is your last QA turn. The goal will be auto-completed if you run this command again."
+      );
+    }
+
+    lines.push("");
+    lines.push(
+      "This is a verification loop - you MUST ensure all criteria are met before committing."
+    );
+
     return lines.join("\n");
   }
 

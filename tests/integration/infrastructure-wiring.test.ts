@@ -12,7 +12,7 @@ describe("Infrastructure Wiring Integration", () => {
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(process.cwd(), "test-integration-"));
-    container = bootstrap(tmpDir);
+    container = await bootstrap(tmpDir);
   });
 
   afterEach(async () => {

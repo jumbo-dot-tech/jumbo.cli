@@ -128,7 +128,7 @@ async function executeCommand(
   let container: ApplicationContainer | undefined;
 
   if (!isSubcommandHelp) {
-    container = bootstrap(jumboRoot);
+    container = await bootstrap(jumboRoot);
   }
 
   try {

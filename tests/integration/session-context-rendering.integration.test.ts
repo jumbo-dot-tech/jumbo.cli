@@ -49,7 +49,7 @@ describe("Integration: Session Context Rendering", () => {
     // ============================================================
     // STEP 1: Start first session (publish SessionStarted event)
     // ============================================================
-    container = bootstrap(testRoot);
+    container = await bootstrap(testRoot);
 
     const sessionId = "session_test_123";
     const goalId = "goal_test_456";
@@ -175,7 +175,7 @@ describe("Integration: Session Context Rendering", () => {
     // ============================================================
     // Fresh start - no previous sessions
     // ============================================================
-    container = bootstrap(testRoot);
+    container = await bootstrap(testRoot);
 
     const getLatestSessionSummary = new GetLatestSessionSummaryQueryHandler(
       container.sessionSummaryProjectionStore

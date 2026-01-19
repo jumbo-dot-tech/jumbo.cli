@@ -42,6 +42,7 @@ import { FsGoalUnblockedEventStore } from "../../../infrastructure/work/goals/un
 import { FsGoalPausedEventStore } from "../../../infrastructure/work/goals/pause/FsGoalPausedEventStore.js";
 import { FsGoalResumedEventStore } from "../../../infrastructure/work/goals/resume/FsGoalResumedEventStore.js";
 import { FsGoalCompletedEventStore } from "../../../infrastructure/work/goals/complete/FsGoalCompletedEventStore.js";
+import { FsGoalReviewedEventStore } from "../../../infrastructure/work/goals/complete/FsGoalReviewedEventStore.js";
 import { FsGoalResetEventStore } from "../../../infrastructure/work/goals/reset/FsGoalResetEventStore.js";
 import { FsGoalRemovedEventStore } from "../../../infrastructure/work/goals/remove/FsGoalRemovedEventStore.js";
 // Decision Event Stores - decomposed by use case
@@ -271,6 +272,13 @@ import { CompleteGoalController } from "../../../application/work/goals/complete
 import { CompleteGoalCommandHandler } from "../../../application/work/goals/complete/CompleteGoalCommandHandler.js";
 import { CompleteGoalPromptService } from "../../../application/work/goals/complete/CompleteGoalPromptService.js";
 import { GetGoalContextQueryHandler } from "../../../application/work/goals/get-context/GetGoalContextQueryHandler.js";
+import { ReviewTurnTracker } from "../../../application/work/goals/complete/ReviewTurnTracker.js";
+import { IGoalReviewedEventWriter } from "../../../application/work/goals/complete/IGoalReviewedEventWriter.js";
+import { IGoalReviewedEventReader } from "../../../application/work/goals/complete/IGoalReviewedEventReader.js";
+// Settings Infrastructure
+import { ISettingsReader } from "../../../application/shared/settings/ISettingsReader.js";
+import { FsSettingsReader } from "../../../infrastructure/shared/settings/FsSettingsReader.js";
+import { FsSettingsInitializer } from "../../../infrastructure/shared/settings/FsSettingsInitializer.js";
 import { IDecisionAddedProjector } from "../../../application/solution/decisions/add/IDecisionAddedProjector.js";
 import { IDecisionUpdatedProjector } from "../../../application/solution/decisions/update/IDecisionUpdatedProjector.js";
 import { IDecisionUpdateReader } from "../../../application/solution/decisions/update/IDecisionUpdateReader.js";
@@ -445,6 +453,7 @@ export interface ApplicationContainer {
   eventStore: IEventStore;
   clock: IClock;
   db: Database.Database;
+  settingsReader: ISettingsReader;
 
   // Maintenance Services
   databaseRebuildService: IDatabaseRebuildService;
@@ -466,6 +475,7 @@ export interface ApplicationContainer {
   goalPausedEventStore: IGoalPausedEventWriter & IGoalPausedEventReader;
   goalResumedEventStore: IGoalResumedEventWriter & IGoalResumedEventReader;
   goalCompletedEventStore: IGoalCompletedEventWriter & IGoalCompletedEventReader;
+  goalReviewedEventStore: IGoalReviewedEventWriter & IGoalReviewedEventReader;
   goalResetEventStore: IGoalResetEventWriter & IGoalResetEventReader;
   goalRemovedEventStore: IGoalRemovedEventWriter & IGoalRemovedEventReader;
 
@@ -492,6 +502,7 @@ export interface ApplicationContainer {
   goalContextReader: IGoalContextReader;
   goalStatusReader: IGoalStatusReader & IGoalReadForSessionSummary;
   // Goal Controllers
+  reviewTurnTracker: ReviewTurnTracker;
   completeGoalController: CompleteGoalController;
 
   // Solution Category - Event Stores
@@ -622,7 +633,7 @@ export interface ApplicationContainer {
  * @param jumboRoot - Path to the .jumbo directory
  * @returns ApplicationContainer with all dependencies wired
  */
-export function bootstrap(jumboRoot: string): ApplicationContainer {
+export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer> {
   // ============================================================
   // STEP 1: Create LocalInfrastructureModule (handles resources)
   // ============================================================
@@ -638,6 +649,12 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   const eventBus = infrastructureModule.getEventBus();
   const clock = infrastructureModule.getClock();
   const cliVersionReader = new CliVersionReader();
+
+  // Initialize settings file if it doesn't exist
+  const settingsInitializer = new FsSettingsInitializer(jumboRoot);
+  await settingsInitializer.ensureSettingsFileExists();
+
+  const settingsReader = new FsSettingsReader(jumboRoot);
 
   // Create database rebuild service
   // TEMPORARY: Uses sequential event bus to avoid race conditions during rebuild
@@ -666,6 +683,7 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   const goalPausedEventStore = new FsGoalPausedEventStore(jumboRoot);
   const goalResumedEventStore = new FsGoalResumedEventStore(jumboRoot);
   const goalCompletedEventStore = new FsGoalCompletedEventStore(jumboRoot);
+  const goalReviewedEventStore = new FsGoalReviewedEventStore(jumboRoot);
   const goalResetEventStore = new FsGoalResetEventStore(jumboRoot);
   const goalRemovedEventStore = new FsGoalRemovedEventStore(jumboRoot);
 
@@ -834,11 +852,19 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     guidelineContextReader,
     relationRemovedProjector
   );
+  const reviewTurnTracker = new ReviewTurnTracker(
+    goalReviewedEventStore,
+    settingsReader
+  );
   const completeGoalController = new CompleteGoalController(
     completeGoalCommandHandler,
     getGoalContextQueryHandler,
     goalCompletedProjector,
-    completeGoalPromptService
+    completeGoalPromptService,
+    reviewTurnTracker,
+    goalReviewedEventStore,
+    goalReviewedEventStore,
+    eventBus
   );
 
   // ============================================================
@@ -1004,6 +1030,7 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     eventStore,
     clock,
     db,
+    settingsReader,
 
     // Maintenance Services
     databaseRebuildService,
@@ -1025,6 +1052,7 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     goalPausedEventStore,
     goalResumedEventStore,
     goalCompletedEventStore,
+    goalReviewedEventStore,
     goalResetEventStore,
     goalRemovedEventStore,
     // Session Projection Stores - decomposed by use case
@@ -1050,6 +1078,7 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     goalContextReader,
     goalStatusReader,
     // Goal Controllers
+    reviewTurnTracker,
     completeGoalController,
 
     // Solution Category

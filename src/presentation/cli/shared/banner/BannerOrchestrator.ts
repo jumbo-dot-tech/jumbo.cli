@@ -72,7 +72,7 @@ export async function showBanner(version: string): Promise<void> {
 
   let container: ApplicationContainer | null = null;
   if (projectExists) {
-    container = bootstrap(jumboRoot);
+    container = await bootstrap(jumboRoot);
   }
 
   const displayContext = await gatherDisplayContext(container);
