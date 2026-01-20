@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - Unreleased
+
+### BREAKING CHANGES
+
+- **Session pause/resume removed**: The session pause and resume functionality has been completely removed from the CLI. Sessions now only support `session start` and `session end` commands. Any paused sessions will be automatically migrated to active status.
+  - Removed commands: `jumbo session pause` and `jumbo session resume`
+  - Goal pause/resume functionality remains unchanged
+
 ## [1.0.1] - 2026-01-10
 
 ### Changed

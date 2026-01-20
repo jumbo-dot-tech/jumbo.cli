@@ -20,7 +20,7 @@ export class EndSessionCommandHandler {
   ) {}
 
   async execute(command: EndSessionCommand): Promise<{ sessionId: string }> {
-    // 1. Find active/paused session
+    // 1. Find active session
     const activeSession = await this.activeSessionReader.findActive();
     if (!activeSession) {
       throw new Error(SessionErrorMessages.NO_ACTIVE_SESSION);

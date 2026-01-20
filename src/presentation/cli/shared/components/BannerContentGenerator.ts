@@ -83,8 +83,6 @@ function generateProjectSummaryContent(context: BannerDisplayContext): string[] 
   // Session status
   if (context.work.session && context.work.session.status === "active") {
     lines.push("  " + chalk.gray("Session: ") + context.work.session.focus + " " + chalk.green("(active)"));
-  } else if (context.work.session && context.work.session.status === "paused") {
-    lines.push("  " + chalk.gray("Session paused. Resume with: ") + chalk.cyan("jumbo session resume"));
   } else {
     lines.push("  " + chalk.gray("Start session: ") + chalk.cyan('jumbo session start --focus "Your focus"'));
   }

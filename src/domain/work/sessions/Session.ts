@@ -4,7 +4,7 @@ import {
 } from "../../shared/BaseAggregate.js";
 import { UUID } from "../../shared/BaseEvent.js";
 import { ValidationRuleSet } from "../../shared/validation/ValidationRule.js";
-import { SessionEvent, SessionStartedEvent, SessionPausedEvent, SessionResumedEvent, SessionEndedEvent } from "./EventIndex.js";
+import { SessionEvent, SessionStartedEvent, SessionEndedEvent } from "./EventIndex.js";
 import {
   SessionEventType,
   SessionStatus,
@@ -34,16 +34,6 @@ export class Session extends BaseAggregate<SessionState, SessionEvent> {
   static apply(state: SessionState, event: SessionEvent): void {
     switch (event.type) {
       case SessionEventType.STARTED: {
-        state.status = SessionStatus.ACTIVE;
-        state.version = event.version;
-        break;
-      }
-      case SessionEventType.PAUSED: {
-        state.status = SessionStatus.PAUSED;
-        state.version = event.version;
-        break;
-      }
-      case SessionEventType.RESUMED: {
         state.status = SessionStatus.ACTIVE;
         state.version = event.version;
         break;
@@ -102,46 +92,6 @@ export class Session extends BaseAggregate<SessionState, SessionEvent> {
       {},
       Session.apply
     ) as SessionStartedEvent;
-  }
-
-  pause(): SessionPausedEvent {
-    // State validation - cannot pause an ended session
-    if (this.state.status === SessionStatus.ENDED) {
-      throw new Error("Cannot pause an ended session");
-    }
-
-    // Idempotent: if already paused, still emit event
-    // This allows the event stream to capture all pause attempts
-    // The projection will be idempotent (status remains 'paused')
-
-    // No input validation needed (no parameters)
-
-    // Use BaseAggregate.makeEvent
-    return this.makeEvent(
-      SessionEventType.PAUSED,
-      {},
-      Session.apply
-    ) as SessionPausedEvent;
-  }
-
-  resume(): SessionResumedEvent {
-    // State validation - cannot resume an ended session
-    if (this.state.status === SessionStatus.ENDED) {
-      throw new Error("Cannot resume an ended session");
-    }
-
-    // Idempotent: if already active, still emit event
-    // This allows the event stream to capture all resume attempts
-    // The projection will be idempotent (status remains 'active')
-
-    // No input validation needed (no parameters)
-
-    // Use BaseAggregate.makeEvent
-    return this.makeEvent(
-      SessionEventType.RESUMED,
-      {},
-      Session.apply
-    ) as SessionResumedEvent;
   }
 
   /**

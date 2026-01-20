@@ -42,7 +42,7 @@ export const metadata: CommandMetadata = {
       description: "List ended sessions as JSON",
     },
   ],
-  related: ["session start", "session end", "session pause", "session resume"],
+  related: ["session start", "session end"],
 };
 
 /**

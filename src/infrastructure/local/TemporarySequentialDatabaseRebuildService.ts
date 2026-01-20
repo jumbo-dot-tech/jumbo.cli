@@ -43,8 +43,6 @@ import { getNamespaceMigrations } from "../shared/persistence/migrations.config.
 // Projectors
 import { SqliteSessionStartedProjector } from "../work/sessions/start/SqliteSessionStartedProjector.js";
 import { SqliteSessionEndedProjector } from "../work/sessions/end/SqliteSessionEndedProjector.js";
-import { SqliteSessionPausedProjector } from "../work/sessions/pause/SqliteSessionPausedProjector.js";
-import { SqliteSessionResumedProjector } from "../work/sessions/resume/SqliteSessionResumedProjector.js";
 import { SqliteSessionSummaryProjectionStore } from "../work/sessions/get-context/SqliteSessionSummaryProjectionStore.js";
 import { SqliteGoalStatusReader } from "../work/goals/SqliteGoalStatusReader.js";
 import { SqliteDecisionSessionReader } from "../solution/decisions/get-context/SqliteDecisionSessionReader.js";
@@ -94,8 +92,6 @@ import { SqliteRelationRemovedProjector } from "../relations/remove/SqliteRelati
 // Handlers
 import { SessionStartedEventHandler } from "../../application/work/sessions/start/SessionStartedEventHandler.js";
 import { SessionEndedEventHandler } from "../../application/work/sessions/end/SessionEndedEventHandler.js";
-import { SessionPausedEventHandler } from "../../application/work/sessions/pause/SessionPausedEventHandler.js";
-import { SessionResumedEventHandler } from "../../application/work/sessions/resume/SessionResumedEventHandler.js";
 import { SessionSummaryProjectionHandler } from "../../application/work/sessions/get-context/SessionSummaryProjectionHandler.js";
 import { GoalAddedEventHandler } from "../../application/work/goals/add/GoalAddedEventHandler.js";
 import { GoalStartedEventHandler } from "../../application/work/goals/start/GoalStartedEventHandler.js";
@@ -186,8 +182,6 @@ export class TemporarySequentialDatabaseRebuildService implements IDatabaseRebui
     // Step 5: Create all projectors
     const sessionStartedProjector = new SqliteSessionStartedProjector(newDb);
     const sessionEndedProjector = new SqliteSessionEndedProjector(newDb);
-    const sessionPausedProjector = new SqliteSessionPausedProjector(newDb);
-    const sessionResumedProjector = new SqliteSessionResumedProjector(newDb);
     const sessionSummaryProjectionStore = new SqliteSessionSummaryProjectionStore(newDb);
     const goalStatusReader = new SqliteGoalStatusReader(newDb);
     const decisionSessionReader = new SqliteDecisionSessionReader(newDb);
@@ -237,8 +231,6 @@ export class TemporarySequentialDatabaseRebuildService implements IDatabaseRebui
     // Step 6: Create all handlers
     const sessionStartedEventHandler = new SessionStartedEventHandler(sessionStartedProjector);
     const sessionEndedEventHandler = new SessionEndedEventHandler(sessionEndedProjector);
-    const sessionPausedEventHandler = new SessionPausedEventHandler(sessionPausedProjector);
-    const sessionResumedEventHandler = new SessionResumedEventHandler(sessionResumedProjector);
     const sessionSummaryProjectionHandler = new SessionSummaryProjectionHandler(
       sequentialEventBus,
       sessionSummaryProjectionStore,
@@ -290,8 +282,6 @@ export class TemporarySequentialDatabaseRebuildService implements IDatabaseRebui
 
     // Step 7: Register all handlers to sequential bus
     sequentialEventBus.subscribe("SessionStartedEvent", sessionStartedEventHandler);
-    sequentialEventBus.subscribe("SessionPausedEvent", sessionPausedEventHandler);
-    sequentialEventBus.subscribe("SessionResumedEvent", sessionResumedEventHandler);
     sequentialEventBus.subscribe("SessionEndedEvent", sessionEndedEventHandler);
     sessionSummaryProjectionHandler.subscribe();
     sequentialEventBus.subscribe("GoalAddedEvent", goalAddedEventHandler);

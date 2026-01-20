@@ -31,8 +31,6 @@ import { IDatabaseRebuildService } from "../../../application/maintenance/db/reb
 // Session Event Stores - decomposed by use case
 import { FsSessionStartedEventStore } from "../../../infrastructure/work/sessions/start/FsSessionStartedEventStore.js";
 import { FsSessionEndedEventStore } from "../../../infrastructure/work/sessions/end/FsSessionEndedEventStore.js";
-import { FsSessionPausedEventStore } from "../../../infrastructure/work/sessions/pause/FsSessionPausedEventStore.js";
-import { FsSessionResumedEventStore } from "../../../infrastructure/work/sessions/resume/FsSessionResumedEventStore.js";
 // Goal Event Stores - decomposed by use case
 import { FsGoalAddedEventStore } from "../../../infrastructure/work/goals/add/FsGoalAddedEventStore.js";
 import { FsGoalStartedEventStore } from "../../../infrastructure/work/goals/start/FsGoalStartedEventStore.js";
@@ -94,8 +92,6 @@ import { SqliteSessionStartedProjector } from "../../../infrastructure/work/sess
 import { SqliteSessionEndedProjector } from "../../../infrastructure/work/sessions/end/SqliteSessionEndedProjector.js";
 import { SqliteActiveSessionReader } from "../../../infrastructure/work/sessions/end/SqliteActiveSessionReader.js";
 import { SqliteSessionListReader } from "../../../infrastructure/work/sessions/list/SqliteSessionListReader.js";
-import { SqliteSessionPausedProjector } from "../../../infrastructure/work/sessions/pause/SqliteSessionPausedProjector.js";
-import { SqliteSessionResumedProjector } from "../../../infrastructure/work/sessions/resume/SqliteSessionResumedProjector.js";
 import { SqliteSessionSummaryProjectionStore } from "../../../infrastructure/work/sessions/get-context/SqliteSessionSummaryProjectionStore.js";
 import { SqliteSessionSummaryReader } from "../../../infrastructure/work/sessions/get-context/SqliteSessionSummaryReader.js";
 // Goal Projection Stores - decomposed by use case
@@ -184,8 +180,6 @@ import { SqliteSolutionContextReader } from "../../../infrastructure/solution/Sq
 // Event Handlers (Projection Handlers)
 import { SessionStartedEventHandler } from "../../../application/work/sessions/start/SessionStartedEventHandler.js";
 import { SessionEndedEventHandler } from "../../../application/work/sessions/end/SessionEndedEventHandler.js";
-import { SessionPausedEventHandler } from "../../../application/work/sessions/pause/SessionPausedEventHandler.js";
-import { SessionResumedEventHandler } from "../../../application/work/sessions/resume/SessionResumedEventHandler.js";
 import { SessionSummaryProjectionHandler } from "../../../application/work/sessions/get-context/SessionSummaryProjectionHandler.js";
 import { GoalAddedEventHandler } from "../../../application/work/goals/add/GoalAddedEventHandler.js";
 import { GoalStartedEventHandler } from "../../../application/work/goals/start/GoalStartedEventHandler.js";
@@ -246,8 +240,6 @@ import { ISessionStartedProjector } from "../../../application/work/sessions/sta
 import { ISessionEndedProjector } from "../../../application/work/sessions/end/ISessionEndedProjector.js";
 import { IActiveSessionReader } from "../../../application/work/sessions/end/IActiveSessionReader.js";
 import { ISessionListReader } from "../../../application/work/sessions/list/ISessionListReader.js";
-import { ISessionPausedProjector } from "../../../application/work/sessions/pause/ISessionPausedProjector.js";
-import { ISessionResumedProjector } from "../../../application/work/sessions/resume/ISessionResumedProjector.js";
 import { ISessionSummaryProjectionStore } from "../../../application/work/sessions/get-context/ISessionSummaryProjectionStore.js";
 import { ISessionSummaryReader } from "../../../application/work/sessions/get-context/ISessionSummaryReader.js";
 import { IGoalAddedProjector } from "../../../application/work/goals/add/IGoalAddedProjector.js";
@@ -370,10 +362,6 @@ import { UnprimedBrownfieldQualifier } from "../../../application/solution/Unpri
 import { ISessionStartedEventWriter } from "../../../application/work/sessions/start/ISessionStartedEventWriter.js";
 import { ISessionEndedEventWriter } from "../../../application/work/sessions/end/ISessionEndedEventWriter.js";
 import { ISessionEndedEventReader } from "../../../application/work/sessions/end/ISessionEndedEventReader.js";
-import { ISessionPausedEventWriter } from "../../../application/work/sessions/pause/ISessionPausedEventWriter.js";
-import { ISessionPausedEventReader } from "../../../application/work/sessions/pause/ISessionPausedEventReader.js";
-import { ISessionResumedEventWriter } from "../../../application/work/sessions/resume/ISessionResumedEventWriter.js";
-import { ISessionResumedEventReader } from "../../../application/work/sessions/resume/ISessionResumedEventReader.js";
 // Goal Event Store ports - decomposed by use case
 import { IGoalAddedEventWriter } from "../../../application/work/goals/add/IGoalAddedEventWriter.js";
 import { IGoalStartedEventWriter } from "../../../application/work/goals/start/IGoalStartedEventWriter.js";
@@ -465,8 +453,6 @@ export interface ApplicationContainer {
   // Work Category - Session Event Stores - decomposed by use case
   sessionStartedEventStore: ISessionStartedEventWriter;
   sessionEndedEventStore: ISessionEndedEventWriter & ISessionEndedEventReader;
-  sessionPausedEventStore: ISessionPausedEventWriter & ISessionPausedEventReader;
-  sessionResumedEventStore: ISessionResumedEventWriter & ISessionResumedEventReader;
   // Goal Event Stores - decomposed by use case
   goalAddedEventStore: IGoalAddedEventWriter;
   goalStartedEventStore: IGoalStartedEventWriter & IGoalStartedEventReader;
@@ -484,8 +470,6 @@ export interface ApplicationContainer {
   sessionStartedProjector: ISessionStartedProjector;
   sessionEndedProjector: ISessionEndedProjector;
   activeSessionReader: IActiveSessionReader;
-  sessionPausedProjector: ISessionPausedProjector;
-  sessionResumedProjector: ISessionResumedProjector;
   sessionSummaryProjectionStore: ISessionSummaryProjectionStore;
   sessionSummaryReader: ISessionSummaryReader;
   sessionListReader: ISessionListReader;
@@ -674,8 +658,6 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
   // Work Category - Session Event Stores - decomposed by use case
   const sessionStartedEventStore = new FsSessionStartedEventStore(jumboRoot);
   const sessionEndedEventStore = new FsSessionEndedEventStore(jumboRoot);
-  const sessionPausedEventStore = new FsSessionPausedEventStore(jumboRoot);
-  const sessionResumedEventStore = new FsSessionResumedEventStore(jumboRoot);
   // Goal Event Stores - decomposed by use case
   const goalAddedEventStore = new FsGoalAddedEventStore(jumboRoot);
   const goalStartedEventStore = new FsGoalStartedEventStore(jumboRoot);
@@ -747,8 +729,6 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
   const sessionStartedProjector = new SqliteSessionStartedProjector(db);
   const sessionEndedProjector = new SqliteSessionEndedProjector(db);
   const activeSessionReader = new SqliteActiveSessionReader(db);
-  const sessionPausedProjector = new SqliteSessionPausedProjector(db);
-  const sessionResumedProjector = new SqliteSessionResumedProjector(db);
   const sessionSummaryProjectionStore = new SqliteSessionSummaryProjectionStore(db);
   const sessionSummaryReader = new SqliteSessionSummaryReader(db);
   const sessionListReader = new SqliteSessionListReader(db);
@@ -876,8 +856,6 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
   // Work Category - Session Projection Handlers - using decomposed projectors
   const sessionStartedEventHandler = new SessionStartedEventHandler(sessionStartedProjector);
   const sessionEndedEventHandler = new SessionEndedEventHandler(sessionEndedProjector);
-  const sessionPausedEventHandler = new SessionPausedEventHandler(sessionPausedProjector);
-  const sessionResumedEventHandler = new SessionResumedEventHandler(sessionResumedProjector);
   const sessionSummaryProjectionHandler = new SessionSummaryProjectionHandler(
     eventBus,
     sessionSummaryProjectionStore,
@@ -949,8 +927,6 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
 
   // Work Category - Session events
   eventBus.subscribe("SessionStartedEvent", sessionStartedEventHandler);
-  eventBus.subscribe("SessionPausedEvent", sessionPausedEventHandler);
-  eventBus.subscribe("SessionResumedEvent", sessionResumedEventHandler);
   eventBus.subscribe("SessionEndedEvent", sessionEndedEventHandler);
 
   // Work Category - Session Summary (cross-aggregate projection)
@@ -1043,8 +1019,6 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
     // Work Category - Session Event Stores - decomposed by use case
     sessionStartedEventStore,
     sessionEndedEventStore,
-    sessionPausedEventStore,
-    sessionResumedEventStore,
     // Goal Event Stores - decomposed by use case
     goalAddedEventStore,
     goalStartedEventStore,
@@ -1061,8 +1035,6 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
     sessionStartedProjector,
     sessionEndedProjector,
     activeSessionReader,
-    sessionPausedProjector,
-    sessionResumedProjector,
     sessionSummaryProjectionStore,
     sessionSummaryReader,
     sessionListReader,

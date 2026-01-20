@@ -70,14 +70,6 @@ describe("SessionSummaryProjectionHandler", () => {
         expect.any(Object)
       );
       expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-        "SessionPausedEvent",
-        expect.any(Object)
-      );
-      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-        "SessionResumedEvent",
-        expect.any(Object)
-      );
-      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
         "GoalCompletedEvent",
         expect.any(Object)
       );

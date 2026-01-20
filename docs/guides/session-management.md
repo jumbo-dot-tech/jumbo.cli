@@ -18,12 +18,9 @@ Sessions provide continuity between work periods. Starting a session:
 ## Session lifecycle
 
 ```
-┌────────┐     pause     ┌────────┐
-│ active │ ────────────► │ paused │
-└────────┘               └────────┘
-     │                        │
-     │          resume        │
-     │ ◄──────────────────────┘
+┌────────┐
+│ active │
+└────────┘
      │
      │ end
      ▼
@@ -73,34 +70,6 @@ Add a detailed summary:
 | `--summary <text>` | Detailed session summary (optional) |
 
 The focus and summary become orientation context for your next session.
-
----
-
-## Pause a session
-
-Temporarily suspend a session:
-
-```bash
-> jumbo session pause
-```
-
-Use this when:
-
-- Taking a break but planning to return
-- Switching to a different task briefly
-- Preserving session state without ending
-
----
-
-## Resume a paused session
-
-Continue a paused session:
-
-```bash
-> jumbo session resume
-```
-
-The session returns to `active` status. Use this to pick up where you left off.
 
 ---
 
@@ -164,10 +133,7 @@ jumbo goal resume --goal-id goal_789
 2. **End sessions with meaningful summaries**
    The focus becomes orientation context for next time
 
-3. **Use pause for short breaks**
-   Preserves session state when you'll return soon
-
-4. **Complete goals before ending sessions**
+3. **Complete goals before ending sessions**
    Triggers knowledge capture prompts
 
 ---

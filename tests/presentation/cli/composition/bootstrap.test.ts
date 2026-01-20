@@ -47,8 +47,6 @@ describe("bootstrap", () => {
     // Verify work category stores - Session Event Stores - decomposed by use case
     expect(container.sessionStartedEventStore).toBeDefined();
     expect(container.sessionEndedEventStore).toBeDefined();
-    expect(container.sessionPausedEventStore).toBeDefined();
-    expect(container.sessionResumedEventStore).toBeDefined();
     // Goal Event Stores - decomposed by use case
     expect(container.goalAddedEventStore).toBeDefined();
     expect(container.goalStartedEventStore).toBeDefined();
@@ -62,8 +60,6 @@ describe("bootstrap", () => {
     expect(container.sessionStartedProjector).toBeDefined();
     expect(container.sessionEndedProjector).toBeDefined();
     expect(container.activeSessionReader).toBeDefined();
-    expect(container.sessionPausedProjector).toBeDefined();
-    expect(container.sessionResumedProjector).toBeDefined();
     expect(container.sessionSummaryProjectionStore).toBeDefined();
     expect(container.sessionSummaryReader).toBeDefined();
     // Goal Projection Stores - decomposed by use case

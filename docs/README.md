@@ -33,7 +33,7 @@ Complete command documentation.
 | Commands | Description |
 |----------|-------------|
 | [Goal Commands](reference/commands/goal.md) | add, start, complete, block, unblock, reset, resume, show, update, remove |
-| [Session Commands](reference/commands/session.md) | start, end, pause, resume |
+| [Session Commands](reference/commands/session.md) | start, end |
 | [Project Commands](reference/commands/project.md) | init, update |
 
 ---

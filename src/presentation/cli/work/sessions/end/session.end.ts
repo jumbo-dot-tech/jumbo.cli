@@ -1,7 +1,7 @@
 /**
  * CLI Command: jumbo session end
  *
- * Ends the current active or paused session with a focus summary.
+ * Ends the current active session with a focus summary.
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";

@@ -6,8 +6,6 @@
 // Session event types
 export const SessionEventType = {
   STARTED: "SessionStartedEvent",
-  PAUSED: "SessionPausedEvent",
-  RESUMED: "SessionResumedEvent",
   ENDED: "SessionEndedEvent",
 } as const;
 
@@ -32,7 +30,7 @@ export const SessionErrorMessages = {
   SUMMARY_TOO_LONG: "Session summary must be less than {max} characters",
   ALREADY_STARTED: "Session is already started",
   NOT_ACTIVE: "Session is not active",
-  NO_ACTIVE_SESSION: "No active or paused session found",
+  NO_ACTIVE_SESSION: "No active session found",
   SESSION_ALREADY_ENDED: "Session has already ended",
 } as const;
 

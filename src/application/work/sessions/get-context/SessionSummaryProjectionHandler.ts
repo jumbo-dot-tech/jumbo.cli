@@ -4,8 +4,6 @@ import { IGoalReadForSessionSummary } from "./IGoalReadForSessionSummary.js";
 import { IDecisionSessionReader } from "./IDecisionSessionReader.js";
 import { SessionStartedEvent } from "../../../../domain/work/sessions/start/SessionStartedEvent.js";
 import { SessionEndedEvent } from "../../../../domain/work/sessions/end/SessionEndedEvent.js";
-import { SessionPausedEvent } from "../../../../domain/work/sessions/pause/SessionPausedEvent.js";
-import { SessionResumedEvent } from "../../../../domain/work/sessions/resume/SessionResumedEvent.js";
 import { GoalCompletedEvent } from "../../../../domain/work/goals/complete/GoalCompletedEvent.js";
 import { GoalBlockedEvent } from "../../../../domain/work/goals/block/GoalBlockedEvent.js";
 import { GoalStartedEvent } from "../../../../domain/work/goals/start/GoalStartedEvent.js";
@@ -22,7 +20,7 @@ import { BaseEvent } from "../../../../domain/shared/BaseEvent.js";
  * session summary for orientation context.
  *
  * Subscriptions:
- * - Session events: SessionStarted, SessionEnded, SessionPaused, SessionResumed
+ * - Session events: SessionStarted, SessionEnded
  * - Goal events: GoalCompleted, GoalBlocked, GoalStarted, GoalPaused, GoalResumed
  * - Decision events: DecisionAdded
  *
@@ -56,14 +54,6 @@ export class SessionSummaryProjectionHandler {
     this.eventBus.subscribe(
       "SessionEndedEvent",
       { handle: this.handleSessionEnded.bind(this) }
-    );
-    this.eventBus.subscribe(
-      "SessionPausedEvent",
-      { handle: this.handleSessionPaused.bind(this) }
-    );
-    this.eventBus.subscribe(
-      "SessionResumedEvent",
-      { handle: this.handleSessionResumed.bind(this) }
     );
 
     // Goal events (cross-aggregate)
@@ -137,30 +127,6 @@ export class SessionSummaryProjectionHandler {
     await this.store.update("LATEST", {
       status: "ended",
       updatedAt: sessionEndedEvent.timestamp,
-    });
-  }
-
-  /**
-   * SessionPaused → Update LATEST status
-   */
-  private async handleSessionPaused(event: BaseEvent): Promise<void> {
-    const sessionPausedEvent = event as SessionPausedEvent;
-
-    await this.store.update("LATEST", {
-      status: "paused",
-      updatedAt: sessionPausedEvent.timestamp,
-    });
-  }
-
-  /**
-   * SessionResumed → Update LATEST status
-   */
-  private async handleSessionResumed(event: BaseEvent): Promise<void> {
-    const sessionResumedEvent = event as SessionResumedEvent;
-
-    await this.store.update("LATEST", {
-      status: "active",
-      updatedAt: sessionResumedEvent.timestamp,
     });
   }
 

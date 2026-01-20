@@ -23,8 +23,6 @@ import { goalUnblock, metadata as goalUnblockMeta } from '../../work/goals/unblo
 import { goalUpdate, metadata as goalUpdateMeta } from '../../work/goals/update/goal.update.js';
 import { sessionEnd, metadata as sessionEndMeta } from '../../work/sessions/end/session.end.js';
 import { sessionsList, metadata as sessionsListMeta } from '../../work/sessions/list/sessions.list.js';
-import { sessionPause, metadata as sessionPauseMeta } from '../../work/sessions/pause/session.pause.js';
-import { sessionResume, metadata as sessionResumeMeta } from '../../work/sessions/resume/session.resume.js';
 import { sessionStart, metadata as sessionStartMeta } from '../../work/sessions/start/session.start.js';
 import { architectureDefine, metadata as architectureDefineMeta } from '../../solution/architecture/define/architecture.define.js';
 import { architectureUpdate, metadata as architectureUpdateMeta } from '../../solution/architecture/update/architecture.update.js';
@@ -139,16 +137,6 @@ export const commands: RegisteredCommand[] = [
     path: 'sessions list',
     metadata: sessionsListMeta,
     handler: sessionsList
-  },
-  {
-    path: 'session pause',
-    metadata: sessionPauseMeta,
-    handler: sessionPause
-  },
-  {
-    path: 'session resume',
-    metadata: sessionResumeMeta,
-    handler: sessionResume
   },
   {
     path: 'session start',
